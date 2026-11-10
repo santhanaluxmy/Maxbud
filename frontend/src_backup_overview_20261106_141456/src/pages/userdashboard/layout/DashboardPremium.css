@@ -1,0 +1,506 @@
+
+/* ============================================
+   MAXBUD - PREMIUM FINANCE UI REFINEMENT
+   Aqua, Cream, Pink and their shades only
+============================================ */
+
+.db-app,
+.mb-app {
+  --premium-cream: #EEEAD7;
+  --premium-aqua: #B1E5E6;
+  --premium-pink: #F7ADAD;
+  --premium-ink: #31585A;
+  --premium-muted: #729091;
+  --premium-line: rgba(177, 229, 230, 0.7);
+
+  color: var(--premium-ink);
+  background: var(--premium-cream);
+}
+
+/* ============================================
+   CREAM GLASS SIDEBAR & TOPBAR
+============================================ */
+
+.db-app .db-sidebar,
+.mb-app .mb-sidebar {
+  background: rgba(238, 234, 215, 0.95) !important;
+  border-color: var(--premium-line) !important;
+  box-shadow: 0 8px 24px rgba(72, 135, 136, 0.06);
+}
+
+.db-app .db-topbar,
+.mb-app .mb-topbar {
+  background: rgba(238, 234, 215, 0.88) !important;
+  border: 1px solid var(--premium-line);
+  backdrop-filter: blur(18px);
+  border-radius: 15px;
+  min-height: 54px;
+}
+
+.db-app .db-nav-item,
+.mb-app .mb-nav-item {
+  min-height: 37px;
+  border-radius: 10px;
+  font-size: 12px;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.db-app .db-nav-item.selected,
+.mb-app .mb-nav-active {
+  background: rgba(177, 229, 230, 0.7) !important;
+  box-shadow: none;
+}
+
+.db-app .db-nav-item:hover,
+.mb-app .mb-nav-item:hover {
+  background: rgba(177, 229, 230, 0.4);
+}
+
+/* ============================================
+   OVERVIEW - REPLACE DARK HERO
+============================================ */
+
+.db-app .db-hero,
+.mb-app .db-hero {
+  min-height: 170px !important;
+  padding: 18px 26px !important;
+  border-radius: 19px !important;
+
+  background: rgba(238, 234, 215, 0.94) !important;
+  color: var(--premium-ink) !important;
+
+  border: 1px solid var(--premium-line) !important;
+
+  box-shadow:
+    0 10px 25px rgba(83, 145, 146, 0.08) !important;
+
+  overflow: hidden;
+}
+
+.db-hero .db-hero-glow {
+  display: none;
+}
+
+.db-hero .db-hero-copy {
+  max-width: 60%;
+  position: relative;
+  z-index: 2;
+}
+
+.db-hero .db-hero-kicker {
+  margin-bottom: 10px;
+  color: #56898B !important;
+  font-size: 9px;
+}
+
+.db-hero .db-live-dot {
+  background: #80CBCD;
+  box-shadow: 0 0 0 4px rgba(177, 229, 230, 0.38);
+}
+
+.db-hero .db-hero-copy > p {
+  color: var(--premium-muted) !important;
+  font-size: 12px;
+}
+
+.db-hero .db-hero-copy > strong {
+  color: var(--premium-ink) !important;
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: -0.045em;
+}
+
+.db-hero .db-hero-copy > small {
+  color: var(--premium-muted) !important;
+  font-size: 10px;
+  line-height: 1.5;
+  max-width: 380px;
+}
+
+/* Compact hero buttons */
+
+.db-hero .db-hero-actions {
+  gap: 11px;
+  margin-top: 13px;
+}
+
+.db-hero .db-hero-actions button {
+  background: var(--premium-aqua) !important;
+  color: var(--premium-ink) !important;
+  border-radius: 9px;
+  padding: 8px 12px;
+  font-size: 10px;
+}
+
+.db-hero .db-hero-actions button + button {
+  background: transparent !important;
+  color: #56898B !important;
+}
+
+/* Piggy bank + coins illustration */
+
+.db-hero .db-hero-visual {
+  position: relative;
+  flex: 0 0 205px;
+  width: 205px;
+  height: 155px;
+  margin: 0;
+  display: block;
+}
+
+.db-hero .db-hero-visual::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+
+  background-image:
+    url("../../../assets/images/maxbud2.png");
+
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+
+  animation: premium-pig-float 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Remove old dark mini-card and fake bar graphics */
+
+.db-hero .db-hero-credit,
+.db-hero .db-orbit {
+  display: none !important;
+}
+
+/* ============================================
+   SMALL SUMMARY CARDS
+============================================ */
+
+.db-app .db-metric-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 11px;
+  margin: 12px 0;
+}
+
+.db-app .db-metric,
+.mb-app .fx-stat {
+  min-height: 112px;
+  padding: 13px 15px;
+  border-radius: 16px !important;
+}
+
+.db-app .db-metric-top,
+.mb-app .fx-stat-top {
+  margin-bottom: 9px;
+}
+
+.db-app .db-icon-pill,
+.mb-app .fx-stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--premium-aqua);
+}
+
+.db-app .db-icon-pill.pink {
+  background: var(--premium-pink);
+}
+
+.db-app .db-icon-pill.cream {
+  background: var(--premium-cream);
+}
+
+.db-app .db-metric-label,
+.mb-app .fx-stat p {
+  font-size: 10px;
+  color: var(--premium-muted);
+}
+
+.db-app .db-metric > strong,
+.mb-app .fx-stat > strong {
+  font-size: clamp(16px, 1.8vw, 23px);
+  color: var(--premium-ink);
+  margin: 5px 0;
+}
+
+.db-app .db-metric > small,
+.mb-app .fx-stat > small {
+  font-size: 9px;
+}
+
+.db-app .db-metric-prominent {
+  background: rgba(177, 229, 230, 0.58) !important;
+}
+
+/* ============================================
+   GLASS CARDS ON ALL DASHBOARD PAGES
+============================================ */
+
+.db-app .glass-card,
+.mb-app .mb-card,
+.mb-app .mb-glass,
+.mb-app .fx-panel,
+.mb-app .txd-panel {
+  background: rgba(238, 234, 215, 0.88) !important;
+  border: 1px solid var(--premium-line) !important;
+  border-radius: 17px !important;
+
+  box-shadow:
+    0 8px 22px rgba(83, 145, 146, 0.06),
+    inset 0 1px rgba(238, 234, 215, 0.9);
+
+  backdrop-filter: blur(16px);
+}
+
+.db-app .db-panel,
+.mb-app .fx-panel {
+  padding: 16px;
+}
+
+.db-app .db-analytics-grid,
+.db-app .db-bottom-grid {
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.db-app .db-panel-heading {
+  margin-bottom: 12px;
+}
+
+.db-app .db-panel-heading h3 {
+  font-size: 14px;
+  color: var(--premium-ink);
+}
+
+.db-app .db-panel-heading p {
+  font-size: 10px;
+  color: var(--premium-muted);
+}
+
+/* ============================================
+   COMPACT CHARTS
+============================================ */
+
+.db-app .db-chart-svg {
+  height: 175px;
+}
+
+.db-app .db-donut-block {
+  min-height: 185px;
+  gap: 11px;
+}
+
+.db-app .db-donut {
+  width: min(150px, 100%);
+}
+
+.db-app .db-progress > span {
+  background: var(--premium-aqua);
+}
+
+.db-app .db-chart-legend {
+  font-size: 10px;
+}
+
+/* ============================================
+   TRANSACTION & REPORT TABLES
+============================================ */
+
+.db-app .db-table-wrap,
+.mb-app .mb-overflow,
+.mb-app .txd-table-wrap {
+  border: 1px solid var(--premium-line);
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.db-app .db-table,
+.mb-app .mb-table,
+.mb-app .txd-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.db-app .db-table thead,
+.mb-app .mb-table thead,
+.mb-app .txd-table thead {
+  background: rgba(177, 229, 230, 0.35);
+}
+
+.db-app .db-table th,
+.mb-app .mb-table th,
+.mb-app .txd-table th {
+  padding: 11px 12px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--premium-ink);
+  text-align: left;
+}
+
+.db-app .db-table td,
+.mb-app .mb-table td,
+.mb-app .txd-table td {
+  padding: 11px 12px;
+  font-size: 11px;
+  color: var(--premium-ink);
+  border-bottom: 1px solid var(--premium-line);
+}
+
+.db-app .db-table tbody tr,
+.mb-app .mb-table tbody tr,
+.mb-app .txd-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.db-app .db-table tbody tr:hover,
+.mb-app .mb-table tbody tr:hover,
+.mb-app .txd-table tbody tr:hover {
+  background: rgba(177, 229, 230, 0.17);
+}
+
+.db-app .db-table tbody tr:last-child td,
+.mb-app .mb-table tbody tr:last-child td,
+.mb-app .txd-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Category chips */
+
+.db-app .db-table-tag,
+.mb-app .txd-category {
+  display: inline-block;
+  background: rgba(177, 229, 230, 0.26);
+  border: 1px solid var(--premium-line);
+  padding: 5px 9px;
+  border-radius: 8px;
+  font-size: 10px;
+}
+
+/* Table action buttons */
+
+.db-app .db-row-actions button,
+.mb-app .txd-row-actions button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--premium-line);
+  border-radius: 8px;
+  background: rgba(238, 234, 215, 0.9);
+}
+
+.db-app .db-row-actions button:hover,
+.mb-app .txd-row-actions button:hover {
+  background: var(--premium-aqua);
+}
+
+/* ============================================
+   BUDGETS, GOALS AND ACCOUNT CARDS
+============================================ */
+
+.db-app .db-budget-card,
+.db-app .db-goal-card,
+.db-app .db-account-card {
+  border-radius: 16px !important;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.db-app .db-budget-card:hover,
+.db-app .db-goal-card:hover,
+.db-app .db-account-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 25px rgba(83, 145, 146, 0.1);
+}
+
+/* ============================================
+   EMPTY STATES
+============================================ */
+
+.db-app .db-empty,
+.mb-app .fx-empty,
+.mb-app .txd-empty {
+  min-height: 115px;
+  padding: 16px;
+  color: var(--premium-muted);
+}
+
+.db-app .db-empty h4 {
+  font-size: 13px;
+  color: var(--premium-ink);
+}
+
+.db-app .db-empty p {
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+/* ============================================
+   ANIMATIONS
+============================================ */
+
+@keyframes premium-pig-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+/* ============================================
+   RESPONSIVE
+============================================ */
+
+@media (max-width: 950px) {
+  .db-hero .db-hero-visual {
+    width: 165px;
+    flex-basis: 165px;
+  }
+
+  .db-app .db-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .db-app .db-hero,
+  .mb-app .db-hero {
+    padding: 15px !important;
+    min-height: 175px !important;
+  }
+
+  .db-hero .db-hero-copy {
+    max-width: 72%;
+  }
+
+  .db-hero .db-hero-visual {
+    width: 95px;
+    flex-basis: 95px;
+    height: 110px;
+  }
+
+  .db-hero .db-hero-copy > strong {
+    font-size: 23px;
+  }
+
+  .db-app .db-analytics-grid,
+  .db-app .db-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .db-app .db-metric-grid {
+    gap: 8px;
+  }
+
+  .db-app .db-metric {
+    padding: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .db-hero .db-hero-visual::before {
+    animation: none;
+  }
+}

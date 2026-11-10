@@ -1,0 +1,45 @@
+
+
+.max-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  padding: 12px 20px;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
+
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.max-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(32, 52, 58, 0.1);
+}
+
+.max-btn.aqua {
+  background: var(--aqua);
+}
+
+.max-btn.pink {
+  background: var(--pink);
+}
+
+.max-btn.white {
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.max-btn.big {
+  padding: 15px 23px;
+}
+
+.max-nav-actions .max-btn {
+  padding: 9px 15px;
+  font-size: 12px;
+  border-radius: 11px;
+}

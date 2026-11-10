@@ -1,0 +1,12 @@
+
+
+:root {
+  --aqua: #B1E5E6;
+  --cream: #EEEAD7;
+  --pink: #F7ADAD;
+  --ink: #20343a;
+  --muted: #60777b;
+
+  --glass: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.85);
+}

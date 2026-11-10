@@ -1,0 +1,658 @@
+
+/* ============================================
+   MAXBUD DASHBOARD - COMPLETE LAYOUT CSS
+============================================ */
+
+.db-app {
+  --db-aqua: var(--aqua, #B1E5E6);
+  --db-cream: var(--cream, #EEEAD7);
+  --db-pink: var(--pink, #F7ADAD);
+
+  --db-ink: #123e42;
+  --db-muted: #587173;
+  --db-line: rgba(177, 229, 230, .42);
+
+  --premium-cream: var(--db-cream);
+  --premium-aqua: var(--db-aqua);
+  --premium-pink: var(--db-pink);
+  --premium-ink: var(--db-ink);
+  --premium-muted: var(--db-muted);
+  --premium-line: var(--db-line);
+
+  display: flex;
+  min-height: 100vh;
+  color: var(--db-ink);
+  background: #f7f3e9;
+  font-family: "Segoe UI", Arial, sans-serif;
+  isolation: isolate;
+}
+
+.db-app button,
+.db-app input,
+.db-app select {
+  font: inherit;
+}
+
+.db-app button {
+  cursor: pointer;
+}
+
+.db-app :is(a, button, input, summary):focus-visible {
+  outline: 2px solid #3c8789;
+  outline-offset: 4px;
+}
+
+.db-app .glass-card {
+  background: rgba(255, 253, 247, .7);
+  border: 1px solid rgba(255, 253, 247, .9);
+  box-shadow: 0 4px 18px rgba(70, 102, 100, .07);
+  backdrop-filter: blur(18px);
+}
+
+.db-workspace {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ============================================
+   SIDEBAR
+============================================ */
+
+.db-sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 35;
+
+  width: 228px;
+  flex: 0 0 228px;
+  height: 100dvh;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 16px 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-width: thin;
+  border-radius: 0 22px 22px 0;
+
+  background: linear-gradient(
+    120deg,
+    #fbf8f0,
+    #f1ecdd
+  );
+
+  box-shadow: 5px 0 28px rgba(110, 121, 100, .04);
+}
+
+/* Logo */
+
+.db-brand-block {
+  position: relative;
+  padding: 0 20px;
+  margin-bottom: 30px;
+  flex-shrink: 0;
+}
+
+.db-brand {
+  display: flex;
+  align-items: center;
+  height: 88px;
+}
+
+.db-brand img {
+  width: 156px;
+  height: 88px;
+  object-fit: contain;
+}
+
+.db-brand-block p {
+  font-size: 12px;
+  margin: -2px 0 8px;
+  white-space: nowrap;
+}
+
+/* Sidebar navigation */
+
+.db-nav {
+  position: relative;
+  z-index: 2;
+
+  display: grid;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.db-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  min-height: 45px;
+  padding: 10px 18px;
+
+  border-radius: 15px;
+
+  color: var(--db-ink);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+
+  transition: background .2s, transform .2s;
+}
+
+.db-nav-item svg {
+  flex-shrink: 0;
+}
+
+.db-nav-item:hover {
+  background: rgba(177, 229, 230, .3);
+  transform: translateX(2px);
+}
+
+.db-nav-item.selected {
+  background: linear-gradient(
+    100deg,
+    #c0eeea,
+    #a9e1df
+  );
+}
+
+.db-nav-settings {
+  border-top: 1px solid rgba(128, 145, 131, .28);
+  border-radius: 0;
+  padding-top: 20px;
+  padding-left: 10px;
+  margin: 12px 8px 0;
+}
+
+/* ============================================
+   SIDEBAR FOOTER + LEAF
+============================================ */
+
+/* Sign Out stays visible and clickable */
+
+.db-sidebar-footer {
+  position: relative;
+  z-index: 2;
+
+  margin-top: auto;
+  padding: 16px 8px 8px;
+
+  flex-shrink: 0;
+}
+
+/* Sign Out */
+
+.db-signout {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  border: 0;
+  background: transparent;
+  color: var(--db-muted);
+
+  padding: 8px;
+  font-size: 12px;
+}
+
+/* IMPORTANT:
+   Existing original leaf moved after footer.
+   It remains part of sidebar layout,
+   not an absolute overlay on menu items. */
+
+.db-sidebar-art {
+  position: relative;
+
+  left: auto;
+  top: auto;
+  right: auto;
+  bottom: auto;
+
+  order: 99;
+
+  display: block;
+
+  width: calc(100% + 24px);
+  height: 92px;
+  flex: 0 0 92px;
+
+  margin: 8px -12px -16px;
+
+  pointer-events: none;
+  z-index: 0;
+
+  color: #9dd6d0;
+}
+
+/* ============================================
+   TOPBAR
+============================================ */
+
+.db-topbar {
+  position: relative;
+  z-index: 25;
+
+  height: 76px;
+
+  display: grid;
+  grid-template-columns:
+    44px minmax(0, 1fr) auto;
+
+  gap: 28px;
+  align-items: center;
+
+  padding: 12px 28px;
+}
+
+.db-hamburger,
+.db-bell,
+.db-drawer-close {
+  width: 42px;
+  height: 42px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(255, 253, 247, .9);
+  background: rgba(255, 253, 247, .8);
+
+  border-radius: 15px;
+  color: var(--db-ink);
+
+  box-shadow: 0 3px 10px rgba(70, 102, 100, .04);
+}
+
+.db-bell {
+  box-shadow: none;
+}
+
+.db-hamburger:hover,
+.db-bell:hover {
+  background: #d9efea;
+}
+
+/* Search */
+
+.db-search {
+  position: relative;
+
+  width: 100%;
+  max-width: 650px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 0 16px;
+
+  border: 1px solid rgba(255, 253, 247, .95);
+  background: rgba(255, 253, 247, .8);
+  border-radius: 15px;
+
+  color: var(--db-muted);
+
+  box-shadow: 0 4px 16px rgba(70, 102, 100, .04);
+}
+
+.db-search > svg {
+  flex-shrink: 0;
+}
+
+.db-search input {
+  width: 100%;
+  min-width: 0;
+
+  outline: none;
+  padding: 10px 0;
+
+  border: 0;
+  background: transparent;
+
+  font-size: 13px;
+  color: var(--db-ink);
+}
+
+.db-search input::placeholder {
+  color: #617476;
+  opacity: 1;
+}
+
+/* Search results and profile menu */
+
+.db-search-results,
+.db-profile-menu {
+  position: absolute;
+  z-index: 40;
+
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+
+  border: 1px solid var(--db-line);
+  border-radius: 16px;
+
+  padding: 12px;
+  background: #fcfaf4;
+
+  box-shadow: 0 12px 32px rgba(48, 91, 92, .12);
+}
+
+.db-search-results small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: .1em;
+  color: var(--db-muted);
+  padding: 4px 8px 8px;
+}
+
+.db-search-results a,
+.db-profile-menu a,
+.db-profile-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  width: 100%;
+  padding: 10px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: transparent;
+  color: var(--db-ink);
+
+  font-size: 13px;
+  text-align: left;
+}
+
+.db-search-results a:hover,
+.db-profile-menu a:hover,
+.db-profile-menu button:hover {
+  background: #def0e9;
+}
+
+.db-search-results p {
+  padding: 8px;
+  margin: 0;
+  font-size: 13px;
+}
+
+/* Profile */
+
+.db-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.db-profile {
+  position: relative;
+}
+
+.db-profile summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  list-style: none;
+  cursor: pointer;
+}
+
+.db-profile summary::-webkit-details-marker {
+  display: none;
+}
+
+.db-avatar {
+  height: 42px;
+  width: 42px;
+  flex-shrink: 0;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+  background: #bcebe6;
+  border: 2px solid #fffdf7;
+
+  font-weight: 700;
+  font-size: 19px;
+}
+
+.db-user-name {
+  font-weight: 650;
+  font-size: 14px;
+
+  max-width: 150px;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.db-profile-menu {
+  left: auto;
+  min-width: 220px;
+}
+
+.db-profile-menu > span {
+  display: block;
+  font-size: 12px;
+  color: var(--db-muted);
+
+  padding: 8px 10px;
+  overflow-wrap: anywhere;
+}
+
+/* Mobile controls */
+
+.db-backdrop,
+.db-drawer-close {
+  display: none;
+}
+
+/* Accessibility */
+
+.db-skip-link {
+  position: fixed;
+  top: -80px;
+  left: 16px;
+  z-index: 100;
+
+  background: var(--db-aqua);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.db-skip-link:focus {
+  top: 16px;
+}
+
+/* ============================================
+   COLLAPSED SIDEBAR
+============================================ */
+
+@media (min-width: 991px) {
+  .db-collapsed .db-sidebar {
+    width: 76px;
+    flex-basis: 76px;
+  }
+
+  .db-collapsed .db-brand-block {
+    padding: 0;
+    margin-bottom: 26px;
+  }
+
+  .db-collapsed .db-brand img {
+    width: 52px;
+  }
+
+  .db-collapsed .db-brand-block p,
+  .db-collapsed .db-nav-item span,
+  .db-collapsed .db-signout span,
+  .db-collapsed .db-sidebar-art {
+    display: none;
+  }
+
+  .db-collapsed .db-nav-item {
+    padding: 12px;
+    justify-content: center;
+  }
+
+  .db-collapsed .db-nav-settings {
+    margin: 12px 0 0;
+    padding-top: 20px;
+  }
+}
+
+/* ============================================
+   TABLET
+============================================ */
+
+@media (max-width: 1180px) {
+  .db-sidebar {
+    width: 204px;
+    flex-basis: 204px;
+  }
+
+  .db-brand-block {
+    padding: 0 10px;
+  }
+
+  .db-nav-item {
+    padding-inline: 12px;
+    gap: 12px;
+    font-size: 13px;
+  }
+
+  .db-topbar {
+    gap: 16px;
+    padding-inline: 24px;
+  }
+
+  .db-user-name {
+    max-width: 100px;
+  }
+}
+
+/* ============================================
+   MOBILE SIDEBAR
+============================================ */
+
+@media (max-width: 990px) {
+  .db-sidebar {
+    position: fixed;
+
+    left: 0;
+    top: 0;
+
+    width: 240px;
+    height: 100dvh;
+
+    transform: translateX(-105%);
+    transition: transform .25s ease;
+  }
+
+  .db-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .db-sidebar:not(.open) {
+    visibility: hidden;
+  }
+
+  .db-backdrop {
+    display: block;
+
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+
+    border: 0;
+    background: rgba(18, 62, 66, .28);
+    backdrop-filter: blur(3px);
+  }
+
+  .db-drawer-close {
+    display: grid;
+
+    position: absolute;
+    right: -4px;
+    top: 0;
+
+    width: 28px;
+    height: 28px;
+
+    border-radius: 9px;
+  }
+}
+
+/* ============================================
+   SMALL MOBILE
+============================================ */
+
+@media (max-width: 600px) {
+  .db-topbar {
+    height: 68px;
+
+    padding: 12px 16px;
+
+    grid-template-columns:
+      36px minmax(0, 1fr) auto;
+
+    gap: 10px;
+  }
+
+  .db-topbar-right {
+    gap: 8px;
+  }
+
+  .db-user-name,
+  .db-profile summary > svg {
+    display: none;
+  }
+
+  .db-avatar,
+  .db-bell,
+  .db-hamburger {
+    height: 36px;
+    width: 36px;
+    border-radius: 12px;
+  }
+
+  .db-avatar {
+    border-radius: 50%;
+    font-size: 16px;
+  }
+
+  .db-search {
+    padding: 0 10px;
+    gap: 8px;
+
+    height: 36px;
+    border-radius: 12px;
+  }
+
+  .db-search input {
+    font-size: 12px;
+  }
+
+  .db-search-results {
+    width: min(280px, calc(100vw - 80px));
+  }
+}
+
+/* Reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .db-app *,
+  .db-app *::before,
+  .db-app *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

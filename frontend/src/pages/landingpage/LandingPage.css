@@ -1,0 +1,1380 @@
+
+/* ============================================
+   MAXBUD LANDING PAGE - COMPLETE STYLESHEET
+============================================ */
+
+/* Main page and navigation */
+
+.landing-page {
+  min-height: 100vh;
+  position: relative;
+  background: #F8F6ED;
+  overflow-x: clip;
+}
+
+.landing-page .site-container {
+  width: min(1035px, calc(100% - 80px));
+  margin-inline: auto;
+}
+
+.landing-page .max-navbar {
+  width: min(1035px, calc(100% - 80px));
+  height: 56px;
+  min-height: 56px;
+  margin: 12px auto 0;
+  padding: 4px 16px;
+  position: sticky;
+  top: 12px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 19px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 12px 30px rgba(30, 55, 58, .07);
+}
+
+.landing-page .max-logo {
+  width: 145px;
+  height: 45px;
+  flex: 0 0 145px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: visible;
+}
+
+.landing-page .max-logo img {
+  width: 145px;
+  height: 65px;
+  max-width: none;
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.landing-page .max-nav-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 25px;
+}
+
+.landing-page .max-nav-links a {
+  font-size: 12px;
+  font-weight: 600;
+  color: #50686d;
+  white-space: nowrap;
+  transition: color .2s ease;
+}
+
+.landing-page .max-nav-links a:hover {
+  color: #348f90;
+}
+
+.landing-page .max-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.landing-page .max-menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+}
+
+/* ============================================
+   HERO SECTION
+============================================ */
+
+.landing-page .landing-hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: 1.08fr 1fr;
+  align-items: center;
+  gap: 18px;
+  min-height: 420px;
+  padding: 8px 0 12px;
+  scroll-margin-top: 90px;
+}
+
+/* Aqua stays in hero and fades to light cream.
+   Uses actual hero height, not a fixed page height. */
+
+.landing-page .landing-hero::before {
+  content: "";
+  position: absolute;
+  top: -120px;
+  bottom: -120px;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  z-index: -1;
+  pointer-events: none;
+
+  background: linear-gradient(
+    to bottom,
+    #B1E5E6 0%,
+    #B1E5E6 62%,
+    #D9EBE4 83%,
+    #F8F6ED 100%
+  );
+}
+
+.landing-page .landing-hero-copy {
+  position: relative;
+  z-index: 2;
+  animation: fade-up .75s ease both;
+}
+
+.landing-page .small-eyebrow {
+  display: inline-block;
+  padding: 8px 13px;
+  border-radius: 99px;
+  background: var(--aqua);
+  font-size: 11px;
+}
+
+.landing-page .landing-hero h1 {
+  margin: 6px 0 15px;
+  font-size: clamp(37px, 4.4vw, 55px);
+  font-weight: 900;
+  line-height: 1.22;
+  letter-spacing: -.035em;
+}
+
+.landing-page .max-text {
+  color: #46999b;
+}
+
+.landing-page .bud-text {
+  color: #dc8291;
+}
+
+.landing-page .landing-hero-copy > p {
+  max-width: 490px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.landing-page .hero-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 27px;
+}
+
+.landing-page .landing-hero-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 410px;
+}
+
+.landing-page .landing-hero-art > img {
+  width: 105%;
+  max-width: 560px;
+  object-fit: contain;
+  filter: drop-shadow(
+    0 17px 24px rgba(32, 52, 58, .08)
+  );
+  animation: float 6s ease-in-out infinite;
+}
+
+.landing-page .hero-floating {
+  position: absolute;
+  padding: 13px 16px;
+  border-radius: 19px;
+  background: rgba(255, 255, 255, .8);
+  border: 1px solid rgba(255, 255, 255, .92);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 26px rgba(32, 52, 58, .09);
+  animation: float 5s ease-in-out infinite;
+}
+
+.landing-page .hero-floating span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.landing-page .hero-floating strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.landing-page .hero-floating-top {
+  top: 14%;
+  left: -5%;
+}
+
+.landing-page .hero-floating-bottom {
+  right: -4%;
+  bottom: 14%;
+  animation-delay: -2s;
+}
+
+/* ============================================
+   SHARED LANDING SECTIONS
+============================================ */
+
+.landing-page .landing-section {
+  padding: 38px 0;
+  scroll-margin-top: 84px;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  clip-path: none !important;
+}
+
+.landing-page #features,
+.landing-page #how-it-works,
+.landing-page #pricing,
+.landing-page #faq {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  clip-path: none !important;
+}
+
+.landing-page .section-heading {
+  text-align: center;
+  max-width: 740px;
+  margin: 0 auto 23px;
+}
+
+.landing-page .section-heading > span,
+.landing-page .section-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  color: #528f91;
+}
+
+.landing-page .section-heading h2,
+.landing-page .how-text h2 {
+  margin: 0 0 8px;
+  font-size: clamp(28px, 3.2vw, 42px);
+  line-height: 1.23;
+  letter-spacing: -.035em;
+}
+
+.landing-page .section-heading p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.landing-page .section-footnote {
+  margin-top: 19px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* ============================================
+   SIX FEATURE CARDS
+============================================ */
+
+.landing-page .showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+  align-items: stretch;
+}
+
+.landing-page .showcase-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 310px;
+  height: auto;
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, .76);
+  box-shadow: 0 12px 25px rgba(32, 52, 58, .07);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: fade-up .6s ease both;
+  animation-delay: calc(var(--order) * 85ms);
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+
+.landing-page .showcase-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 21px 40px rgba(32, 52, 58, .11);
+}
+
+.landing-page .showcase-card.tone-aqua {
+  background: rgba(177, 229, 230, .74);
+}
+
+.landing-page .showcase-card.tone-pink {
+  background: rgba(247, 173, 173, .59);
+}
+
+.landing-page .showcase-card.tone-cream {
+  background: #FBFAF5;
+  border: 1.5px solid rgba(111, 166, 167, .55);
+  box-shadow: 0 12px 25px rgba(65, 110, 111, .1);
+}
+
+.landing-page .showcase-copy {
+  position: relative;
+  z-index: 3;
+  padding: 21px 22px 8px;
+}
+
+.landing-page .showcase-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #4b666b;
+  letter-spacing: .09em;
+}
+
+.landing-page .showcase-copy h3 {
+  margin: 9px 0 7px;
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.landing-page .showcase-copy p {
+  max-width: 100%;
+  color: #526a70;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.landing-page .visual-area {
+  position: relative;
+  height: 145px;
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+.landing-page .visual-area > * {
+  transition: transform .3s ease;
+}
+
+.landing-page .showcase-card:hover
+.visual-area > *:first-child {
+  transform: translateY(-5px);
+}
+
+/* Card 1 — Accounts */
+
+.landing-page .accounts-visual {
+  padding: 20px 23px;
+}
+
+.landing-page .visual-account {
+  position: relative;
+  z-index: 2;
+  width: 88%;
+  margin: auto;
+  padding: 13px 16px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .82);
+  border: 1px solid white;
+  box-shadow: 0 13px 25px rgba(32, 52, 58, .09);
+  transform: rotate(-5deg);
+}
+
+.landing-page .visual-account > div:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+
+.landing-page .visual-account small,
+.landing-page .visual-account strong {
+  display: block;
+}
+
+.landing-page .visual-account small {
+  color: #667a7d;
+  font-size: 10px;
+}
+
+.landing-page .visual-account strong {
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.landing-page .mini-round {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: var(--aqua);
+}
+
+.landing-page .visual-account.small-account {
+  width: 78%;
+  margin-top: 7px;
+  transform: translateX(20px) rotate(5deg);
+  font-size: 11px;
+}
+
+.landing-page .small-account span {
+  flex: 1;
+}
+
+.landing-page .visual-orb {
+  position: absolute;
+  width: 105px;
+  height: 105px;
+  border-radius: 50%;
+}
+
+.landing-page .orb-one {
+  right: -25px;
+  bottom: -25px;
+  background: rgba(255, 255, 255, .3);
+}
+
+/* Card 2 — Budget chart */
+
+.landing-page .budget-visual {
+  display: grid;
+  place-items: center;
+  padding: 7px 25px 20px;
+}
+
+.landing-page .mini-chart {
+  width: 85%;
+  height: 135px;
+  padding: 15px 20px 10px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .8);
+  border: 1px solid white;
+  box-shadow: 0 12px 23px rgba(32, 52, 58, .08);
+}
+
+.landing-page .mini-chart-header,
+.landing-page .between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.landing-page .mini-chart-header {
+  font-size: 12px;
+}
+
+.landing-page .mini-chart-columns {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 76px;
+  margin-top: 8px;
+}
+
+.landing-page .mini-column-track {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 99px;
+  background: rgba(32, 52, 58, .08);
+}
+
+.landing-page .mini-column-track span {
+  width: 100%;
+  border-radius: 99px;
+  background: var(--pink);
+  animation: fill-up 1.2s ease both;
+}
+
+.landing-page .chart-week {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 4px;
+  color: #6d7779;
+  font-size: 9px;
+}
+
+/* Card 3 — AI Receipt */
+
+.landing-page .receipt-visual {
+  display: grid;
+  place-items: center;
+}
+
+.landing-page .mini-receipt {
+  width: 155px;
+  min-height: 155px;
+  padding: 19px 15px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .92);
+  box-shadow: 0 10px 24px rgba(32, 52, 58, .11);
+  transform: rotate(-9deg) translateY(8px);
+}
+
+.landing-page .receipt-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 13px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.landing-page .receipt-line {
+  display: block;
+  width: 90%;
+  height: 5px;
+  margin: 9px 0;
+  border-radius: 10px;
+  background: #d7d8ca;
+}
+
+.landing-page .receipt-line.shorter {
+  width: 60%;
+}
+
+.landing-page .receipt-total {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 11px;
+  border-top: 1px dashed #aaa;
+  font-size: 11px;
+}
+
+.landing-page .scan-floating {
+  position: absolute;
+  top: 22px;
+  right: 19%;
+  color: #5d9f9f;
+  animation: float 4s ease-in-out infinite;
+}
+
+.landing-page .scan-corner {
+  position: absolute;
+  width: 35px;
+  height: 35px;
+  border: 3px solid #79bdbd;
+}
+
+.landing-page .corner-one {
+  top: 5px;
+  left: 19%;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.landing-page .corner-two {
+  right: 17%;
+  bottom: 5px;
+  border-left: 0;
+  border-top: 0;
+}
+
+/* Card 4 — Goals */
+
+.landing-page .goals-visual {
+  display: grid;
+  place-items: center;
+}
+
+.landing-page .goal-illustration {
+  position: absolute;
+  bottom: -27px;
+  left: -8px;
+  height: 168px;
+  max-width: 95%;
+  object-fit: contain;
+}
+
+.landing-page .goal-float {
+  position: absolute;
+  right: 12px;
+  bottom: 18px;
+  width: 125px;
+  padding: 10px;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, .9);
+  border: 1px solid white;
+  box-shadow: 0 9px 22px rgba(32, 52, 58, .09);
+}
+
+.landing-page .goal-float span,
+.landing-page .goal-float strong {
+  display: block;
+  font-size: 11px;
+}
+
+.landing-page .goal-float strong {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.landing-page .mini-progress {
+  height: 7px;
+  border-radius: 99px;
+  overflow: hidden;
+  background: #e7e7e0;
+}
+
+.landing-page .mini-progress span {
+  display: block;
+  width: 28%;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--aqua);
+}
+
+/* Card 5 — Predictions */
+
+.landing-page .predictions-visual {
+  display: grid;
+  place-items: center;
+}
+
+.landing-page .predictions-sheet {
+  width: 83%;
+  height: 125px;
+  padding: 13px 16px;
+  background: rgba(255, 255, 255, .82);
+  border: 1px solid white;
+  border-radius: 20px;
+  box-shadow: 0 11px 25px rgba(32, 52, 58, .07);
+}
+
+.landing-page .predictions-sheet .between {
+  font-size: 12px;
+}
+
+.landing-page .predictions-sheet svg {
+  width: 100%;
+  height: 85px;
+  color: #529b9e;
+}
+
+.landing-page .predictions-sheet small {
+  color: #718385;
+  font-size: 10px;
+}
+
+/* Card 6 — Family */
+
+.landing-page .family-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.landing-page .family-avatar {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border: 5px solid white;
+  border-radius: 50%;
+  font-size: 20px;
+  box-shadow: 0 7px 20px rgba(32, 52, 58, .08);
+}
+
+.landing-page .family-one {
+  left: 23%;
+  top: 22px;
+  background: var(--aqua);
+}
+
+.landing-page .family-two {
+  left: 43%;
+  top: 4px;
+  background: var(--pink);
+}
+
+.landing-page .family-three {
+  left: 62%;
+  top: 25px;
+  background: var(--cream);
+}
+
+.landing-page .family-connection {
+  position: absolute;
+  z-index: 0;
+  top: 60px;
+  width: 45%;
+  height: 5px;
+  background: white;
+}
+
+.landing-page .family-label {
+  position: absolute;
+  z-index: 4;
+  bottom: 11px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, .88);
+  border: 1px solid white;
+  font-size: 11px;
+}
+
+/* ============================================
+   HOW IT WORKS
+============================================ */
+
+.landing-page .how-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 26px;
+}
+
+.landing-page .how-illustration {
+  display: grid;
+  place-items: center;
+  min-height: 290px;
+  border-radius: 32px;
+  background: rgba(255, 255, 255, .48);
+  border: 1px solid white;
+  backdrop-filter: blur(18px);
+}
+
+.landing-page .how-illustration img {
+  width: 89%;
+  max-width: 300px;
+  animation: float 7s ease-in-out infinite;
+}
+
+.landing-page .how-text h2 {
+  margin: 0 0 14px;
+}
+
+.landing-page .steps-list {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.landing-page .how-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.landing-page .step-number {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 47px;
+  height: 47px;
+  border-radius: 15px;
+  background: var(--aqua);
+  font-weight: 800;
+}
+
+.landing-page .how-step h3 {
+  margin: 1px 0 7px;
+  font-size: 16px;
+}
+
+.landing-page .how-step p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* ============================================
+   PRICING SECTION
+============================================ */
+
+.landing-page .pricing-heading {
+  max-width: 690px;
+}
+
+.landing-page .pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 20px;
+  max-width: 990px;
+  margin: 0 auto;
+}
+
+.landing-page .plan-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 30px;
+  border-radius: 28px;
+  background: rgba(238, 234, 215, .65);
+  border: 1px solid rgba(177, 229, 230, .85);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow: 0 14px 35px rgba(32, 52, 58, .08);
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+
+.landing-page .plan-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 22px 48px rgba(32, 52, 58, .12);
+}
+
+.landing-page .plan-card::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -70px;
+  right: -50px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(177, 229, 230, .3);
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+.landing-page .premium-plan {
+  background: rgba(247, 173, 173, .15);
+  border: 1.5px solid rgba(247, 173, 173, .9);
+}
+
+.landing-page .premium-plan::before {
+  background: rgba(247, 173, 173, .45);
+}
+
+.landing-page .plan-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.landing-page .plan-card .plan-symbol {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--aqua);
+}
+
+.landing-page .premium-plan .plan-symbol {
+  background: var(--pink);
+}
+
+.landing-page .plan-card .plan-chip {
+  padding: 7px 13px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: rgba(177, 229, 230, .48);
+}
+
+.landing-page .plan-card .premium-chip {
+  background: rgba(247, 173, 173, .5);
+}
+
+.landing-page .plan-card h3 {
+  margin: 18px 0 5px;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -.025em;
+}
+
+.landing-page .plan-card .plan-price {
+  margin: 0;
+  min-height: 40px;
+  font-size: clamp(21px, 2.5vw, 30px);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.landing-page .plan-card .plan-price small {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.landing-page .plan-card > p {
+  margin: 10px 0 20px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.landing-page .plan-benefit-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.landing-page .plan-benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.landing-page .plan-benefit-check {
+  flex: 0 0 24px;
+  display: grid;
+  place-items: center;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(177, 229, 230, .65);
+}
+
+.landing-page .premium-plan .plan-benefit-check {
+  background: rgba(247, 173, 173, .65);
+}
+
+.landing-page .plan-action {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 26px;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  border-radius: 14px;
+  font-weight: 800;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.landing-page .plan-action:hover {
+  transform: translateY(-3px);
+}
+
+.landing-page .pricing-note,
+.landing-page .plans-disclaimer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 auto 14px;
+  max-width: 720px;
+  line-height: 1.5;
+}
+
+.landing-page .plans-disclaimer {
+  margin: 14px auto 0;
+  font-size: 11px;
+}
+
+/* Existing comparison styles retained if used */
+
+.landing-page .comparison-section {
+  max-width: 990px;
+  margin: 35px auto 0;
+  scroll-margin-top: 100px;
+}
+
+.landing-page .comparison-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 17px;
+}
+
+.landing-page .comparison-intro h3 {
+  margin: 0 0 7px;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.landing-page .comparison-intro p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.landing-page .comparison-hint {
+  padding: 8px 14px;
+  border-radius: 99px;
+  background: rgba(177, 229, 230, .55);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.landing-page .comparison-scroll {
+  overflow-x: auto;
+  border-radius: 24px;
+  border: 1px solid rgba(177, 229, 230, .8);
+  background: rgba(238, 234, 215, .67);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow: 0 14px 35px rgba(32, 52, 58, .07);
+}
+
+.landing-page .comparison-table {
+  width: 100%;
+  min-width: 610px;
+  border-spacing: 0;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.landing-page .comparison-table thead {
+  background: rgba(177, 229, 230, .6);
+}
+
+.landing-page .comparison-table thead th {
+  padding: 18px 21px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.landing-page .comparison-table thead
+th:not(:first-child) {
+  width: 24%;
+  text-align: center;
+}
+
+.landing-page .comparison-table tbody th,
+.landing-page .comparison-table tbody td {
+  padding: 13px 21px;
+  border-bottom: 1px solid rgba(177, 229, 230, .4);
+}
+
+.landing-page .comparison-table tbody th {
+  text-align: left;
+  font-weight: 650;
+}
+
+.landing-page .comparison-table tbody td {
+  text-align: center;
+}
+
+.landing-page .comparison-table
+.comparison-group-row th {
+  padding-top: 14px;
+  padding-bottom: 14px;
+  background: rgba(247, 173, 173, .22);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.landing-page .compare-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 10px;
+  min-height: 29px;
+  border-radius: 11px;
+  white-space: nowrap;
+  background: rgba(177, 229, 230, .45);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.landing-page .compare-premium {
+  background: rgba(247, 173, 173, .45);
+}
+
+.landing-page .compare-unavailable {
+  background: rgba(238, 234, 215, .85);
+  color: var(--muted);
+}
+
+/* ============================================
+   FAQ
+============================================ */
+
+.landing-page .faq-list {
+  display: grid;
+  gap: 8px;
+  max-width: 800px;
+  margin: auto;
+}
+
+.landing-page .faq-card {
+  padding: 0 20px;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, .7);
+  border: 1px solid white;
+}
+
+.landing-page .faq-card button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  padding: 20px 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.landing-page .faq-card p {
+  margin: -2px 0 20px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.landing-page .faq-card svg {
+  transition: transform .25s ease;
+}
+
+.landing-page .faq-card svg.rotate {
+  transform: rotate(180deg);
+}
+
+/* ============================================
+   FOOTER
+============================================ */
+
+.landing-page .max-footer {
+  padding: 30px 0;
+  background: rgba(255, 255, 255, .45);
+  border-top: 1px solid white;
+}
+
+.landing-page .footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 23px;
+}
+
+.landing-page .footer-content img {
+  width: 125px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.landing-page .footer-content p,
+.landing-page .footer-content span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.landing-page .footer-content span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+============================================ */
+
+@media (max-width: 1050px) {
+  .landing-page .max-nav-links {
+    gap: 13px;
+  }
+
+  .landing-page .showcase-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .landing-page .landing-hero h1 {
+    font-size: 47px;
+  }
+
+  .landing-page .max-logo {
+    width: 130px;
+    flex-basis: 130px;
+  }
+
+  .landing-page .max-logo img {
+    width: 130px;
+  }
+}
+
+@media (max-width: 760px) {
+  .landing-page .site-container {
+    width: calc(100% - 32px);
+  }
+
+  .landing-page .max-navbar {
+    width: calc(100% - 24px);
+    padding: 4px 12px;
+  }
+
+  .landing-page .max-logo {
+    width: 120px;
+    flex-basis: 120px;
+  }
+
+  .landing-page .max-logo img {
+    width: 120px;
+    height: 60px;
+  }
+
+  .landing-page .max-nav-links {
+    display: none;
+    position: absolute;
+    top: calc(100% + 7px);
+    left: 0;
+    right: 0;
+    padding: 18px;
+    flex-direction: column;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 12px 25px rgba(32, 52, 58, .1);
+  }
+
+  .landing-page .max-nav-links.open {
+    display: flex;
+  }
+
+  .landing-page .max-menu-toggle {
+    display: inline-flex;
+  }
+
+  .landing-page .max-nav-actions {
+    margin-left: auto;
+  }
+
+  .landing-page .max-nav-actions .aqua {
+    display: none;
+  }
+
+  .landing-page .landing-hero,
+  .landing-page .how-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-page .landing-hero {
+    min-height: auto;
+    padding: 32px 0 16px;
+    gap: 20px;
+  }
+
+  .landing-page .landing-hero::before {
+    top: -100px;
+    bottom: -90px;
+
+    background: linear-gradient(
+      to bottom,
+      #B1E5E6 0%,
+      #B1E5E6 65%,
+      #D9EBE4 85%,
+      #F8F6ED 100%
+    );
+  }
+
+  .landing-page .landing-hero h1 {
+    font-size: clamp(36px, 8vw, 48px);
+  }
+
+  .landing-page .landing-hero-art {
+    min-height: 320px;
+  }
+
+  .landing-page .landing-hero-art > img {
+    width: 100%;
+    max-width: 465px;
+  }
+
+  .landing-page .pricing-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .landing-page .plan-card {
+    padding: 24px 22px;
+  }
+
+  .landing-page .comparison-intro h3 {
+    font-size: 19px;
+  }
+
+  .landing-page .landing-section {
+    padding: 30px 0;
+  }
+
+  .landing-page .how-grid {
+    gap: 16px;
+  }
+
+  .landing-page .how-illustration {
+    min-height: 230px;
+  }
+}
+
+@media (max-width: 560px) {
+  .landing-page .site-container {
+    width: calc(100% - 30px);
+  }
+
+  .landing-page .showcase-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-page .showcase-card {
+    min-height: 290px;
+  }
+
+  .landing-page .visual-area {
+    height: 135px;
+  }
+
+  .landing-page .hero-floating {
+    padding: 10px 12px;
+    border-radius: 13px;
+  }
+
+  .landing-page .hero-floating strong {
+    font-size: 12px;
+  }
+
+  .landing-page .comparison-table {
+    font-size: 12px;
+  }
+
+  .landing-page .comparison-table thead th,
+  .landing-page .comparison-table tbody th,
+  .landing-page .comparison-table tbody td {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+
+  .landing-page .plan-card {
+    border-radius: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .showcase-card,
+  .landing-page .plan-card,
+  .landing-page .plan-action {
+    animation: none;
+    transition: none;
+  }
+}

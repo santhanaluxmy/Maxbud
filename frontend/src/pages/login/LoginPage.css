@@ -1,0 +1,325 @@
+
+/* ============================================
+   MAXBUD LOGIN - COMPLETE STYLESHEET
+============================================ */
+
+@import "../../styles/auth.css";
+
+/* Login-specific layout */
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(1100px, calc(100% - 40px));
+  gap: 18px;
+  align-items: stretch;
+  margin-inline: auto;
+}
+
+/* Left illustration panel */
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-visual {
+  min-height: 600px;
+  padding: 28px;
+  border-radius: 24px;
+  background: rgba(177, 229, 230, .30);
+  border: 1px solid rgba(177, 229, 230, .65);
+}
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-visual img {
+  max-width: 88%;
+  max-height: 310px;
+  object-fit: contain;
+}
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-visual h2 {
+  margin: 17px 0 7px;
+  font-size: 24px;
+}
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-visual p {
+  color: #607b7b;
+  line-height: 1.6;
+}
+
+/* Right login panel */
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-panel {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  min-width: 0;
+}
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-card {
+  width: 100%;
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 28px 35px;
+  border-radius: 24px;
+  background: rgba(248, 246, 237, .94);
+  border: 1px solid rgba(177, 229, 230, .65);
+  box-shadow: 0 12px 30px rgba(71, 125, 126, .08);
+}
+
+/* Heading */
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-card h1 {
+  margin: 8px 0 7px;
+  color: #203d40;
+}
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-card > p {
+  color: #607b7b;
+}
+
+/* Form */
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-card form {
+  margin-top: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-card form > label {
+  display: grid;
+  gap: 7px;
+  color: #24484A;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Cream input containers */
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 47px;
+  padding: 0 13px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #F8F6ED !important;
+  border: 1px solid rgba(120, 175, 176, .5);
+  color: #52777a;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+/* Input fields */
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-input input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+  min-height: 45px;
+  border: 0;
+  outline: none;
+  padding: 10px 0;
+  background: transparent !important;
+  color: #24484A !important;
+  caret-color: #24484A;
+  font-size: 13px;
+}
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-input input::placeholder {
+  color: #789091;
+  opacity: 1;
+}
+
+/* Password visibility button */
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-input button {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #52777a;
+  padding: 5px;
+}
+
+/* Focus style */
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-input:focus-within {
+  border-color: #85C9CB;
+  box-shadow: 0 0 0 3px rgba(177, 229, 230, .3);
+}
+
+/* Remove Chrome blue autofill */
+
+.auth-page:has(.auth-switch a[href="/register"])
+input:-webkit-autofill,
+.auth-page:has(.auth-switch a[href="/register"])
+input:-webkit-autofill:hover,
+.auth-page:has(.auth-switch a[href="/register"])
+input:-webkit-autofill:focus {
+  -webkit-box-shadow:
+    0 0 0 1000px #F8F6ED inset !important;
+  -webkit-text-fill-color: #24484A !important;
+  caret-color: #24484A;
+  transition: background-color 9999s ease-out;
+}
+
+/* Remember me / Forgot password */
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-check input {
+  accent-color: #85C9CB;
+}
+
+/* Sign in button */
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-submit {
+  min-height: 45px;
+  border-radius: 12px;
+  background: #B1E5E6 !important;
+  color: #24484A !important;
+  font-weight: 800;
+  transition: transform .2s, box-shadow .2s;
+}
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(104, 161, 162, .16);
+}
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-submit:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+/* Google sign-in area */
+
+.auth-page:has(.auth-switch a[href="/register"])
+.google-divider {
+  margin: 18px 0 13px;
+  text-align: center;
+  color: #607b7b;
+  font-size: 12px;
+}
+
+.auth-page:has(.auth-switch a[href="/register"])
+.google-login-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Feedback */
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-feedback {
+  padding: 11px 13px;
+  border-radius: 11px;
+  background: rgba(247, 173, 173, .35);
+  color: #7e464a;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Register navigation */
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-switch {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 12px;
+  color: #607b7b;
+}
+
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-switch a {
+  color: #367d7e;
+  font-weight: 800;
+}
+
+/* Responsive */
+
+@media (max-width: 800px) {
+  .auth-page:has(.auth-switch a[href="/register"])
+  .auth-layout {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+  }
+
+  .auth-page:has(.auth-switch a[href="/register"])
+  .auth-visual {
+    display: none;
+  }
+
+  .auth-page:has(.auth-switch a[href="/register"])
+  .auth-card {
+    min-height: auto;
+    padding: 28px 23px;
+  }
+}
+
+@media (max-width: 460px) {
+  .auth-page:has(.auth-switch a[href="/register"])
+  .auth-layout {
+    width: calc(100% - 24px);
+  }
+
+  .auth-page:has(.auth-switch a[href="/register"])
+  .auth-card {
+    padding: 24px 17px;
+  }
+
+  .auth-page:has(.auth-switch a[href="/register"])
+  .auth-card h1 {
+    font-size: 27px;
+  }
+
+  .auth-page:has(.auth-switch a[href="/register"])
+  .auth-options {
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-page .auth-submit,
+  .auth-page .auth-input {
+    transition: none;
+  }
+}
