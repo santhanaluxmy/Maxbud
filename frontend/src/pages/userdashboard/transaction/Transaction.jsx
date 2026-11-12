@@ -19,18 +19,31 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+
 import { api } from "../../../api/client";
 import "./Transaction.css";
 
 const PAGE_SIZE = 10;
 
 const expenseCategories = [
-  "Food", "Transport", "Rent", "Bills", "Shopping",
-  "Health", "Education", "Entertainment", "Loan", "Other",
+  "Food",
+  "Transport",
+  "Rent",
+  "Bills",
+  "Shopping",
+  "Health",
+  "Education",
+  "Entertainment",
+  "Loan",
+  "Other",
 ];
 
 const incomeCategories = [
-  "Salary", "Business", "Freelance", "Gift", "Other",
+  "Salary",
+  "Business",
+  "Freelance",
+  "Gift",
+  "Other",
 ];
 
 function localDate() {
@@ -65,6 +78,7 @@ function formatDate(value) {
   if (!value) return "—";
 
   const [year, month, day] = value.split("-").map(Number);
+
   if (!year || !month || !day) return value;
 
   return new Intl.DateTimeFormat("en-LK", {
@@ -74,15 +88,23 @@ function formatDate(value) {
   }).format(new Date(year, month - 1, day));
 }
 
-function SummaryCard({ label, value, icon: Icon, tone, note }) {
+function SummaryCard({
+  label,
+  value,
+  icon: Icon,
+  tone,
+  note,
+}) {
   return (
     <div className={`txd-summary-card txd-${tone}`}>
       <div className="txd-summary-top">
         <span>{label}</span>
+
         <span className="txd-summary-icon">
           <Icon size={19} />
         </span>
       </div>
+
       <strong>{value}</strong>
       <small>{note}</small>
     </div>
@@ -113,6 +135,7 @@ export default function Transaction() {
   const [modalOpen, setModalOpen] = useState(
     () => searchParams.get("add") === "1"
   );
+
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(() => newForm());
   const [formError, setFormError] = useState("");
@@ -121,24 +144,37 @@ export default function Transaction() {
 
   const activeAccounts = accounts.filter(
     (account) =>
-      !account.is_archived && account.status !== "archived"
+      !account.is_archived &&
+      account.status !== "archived"
   );
 
   const unit =
-    overview?.currency || accounts[0]?.currency || "LKR";
+    overview?.currency ||
+    accounts[0]?.currency ||
+    "LKR";
 
-  const monthlyIncome = valueOf(overview?.monthly_income);
-  const monthlyExpenses = valueOf(overview?.monthly_expenses);
+  const monthlyIncome = valueOf(
+    overview?.monthly_income
+  );
 
-  // Load account data and dashboard summary.
+  const monthlyExpenses = valueOf(
+    overview?.monthly_expenses
+  );
+
+  // Load accounts and dashboard summary.
+
   useEffect(() => {
     const controller = new AbortController();
 
     async function loadReferenceData() {
       const [accountResult, dashboardResult] =
         await Promise.allSettled([
-          api("/accounts", { signal: controller.signal }),
-          api("/dashboard", { signal: controller.signal }),
+          api("/accounts", {
+            signal: controller.signal,
+          }),
+          api("/dashboard", {
+            signal: controller.signal,
+          }),
         ]);
 
       if (controller.signal.aborted) return;
@@ -151,6 +187,7 @@ export default function Transaction() {
             ? payload
             : payload?.items || []
         );
+
         setAccountsError("");
       } else {
         setAccountsError(
@@ -165,16 +202,25 @@ export default function Transaction() {
     }
 
     loadReferenceData();
+
     return () => controller.abort();
   }, [revision]);
 
-  // Fetch filtered, paginated transactions.
+  // Load transactions with filters and pagination.
+
   useEffect(() => {
     const controller = new AbortController();
 
     async function loadTransactions() {
-      if (startDate && endDate && startDate > endDate) {
-        setError("Start date cannot be after end date.");
+      if (
+        startDate &&
+        endDate &&
+        startDate > endDate
+      ) {
+        setError(
+          "Start date cannot be after end date."
+        );
+
         setRows([]);
         setHasNext(false);
         setLoading(false);
@@ -189,22 +235,35 @@ export default function Transaction() {
         offset: String(page * PAGE_SIZE),
       });
 
-      if (kind !== "all") params.set("kind", kind);
+      if (kind !== "all") {
+        params.set("kind", kind);
+      }
+
       if (accountFilter) {
         params.set("account_id", accountFilter);
       }
-      if (startDate) params.set("start_date", startDate);
-      if (endDate) params.set("end_date", endDate);
+
+      if (startDate) {
+        params.set("start_date", startDate);
+      }
+
+      if (endDate) {
+        params.set("end_date", endDate);
+      }
 
       try {
         const result = await api(
           `/transactions?${params.toString()}`,
-          { signal: controller.signal }
+          {
+            signal: controller.signal,
+          }
         );
 
         if (controller.signal.aborted) return;
 
-        const items = Array.isArray(result) ? result : [];
+        const items = Array.isArray(result)
+          ? result
+          : [];
 
         setRows(items.slice(0, PAGE_SIZE));
         setHasNext(items.length > PAGE_SIZE);
@@ -212,18 +271,30 @@ export default function Transaction() {
         if (!controller.signal.aborted) {
           setRows([]);
           setHasNext(false);
+
           setError(
-            err.message || "Could not load transactions."
+            err.message ||
+              "Could not load transactions."
           );
         }
       } finally {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     }
 
     loadTransactions();
+
     return () => controller.abort();
-  }, [accountFilter, endDate, kind, page, revision, startDate]);
+  }, [
+    accountFilter,
+    endDate,
+    kind,
+    page,
+    revision,
+    startDate,
+  ]);
 
   const visibleRows = rows.filter((transaction) => {
     const account = accounts.find(
@@ -232,14 +303,19 @@ export default function Transaction() {
 
     const text = `${
       transaction.description || ""
-    } ${transaction.category || ""} ${account?.name || ""}`;
+    } ${transaction.category || ""} ${
+      account?.name || ""
+    }`;
 
     return text
       .toLowerCase()
       .includes(search.trim().toLowerCase());
   });
 
-  function openForm(transaction = null, entryKind = "expense") {
+  function openForm(
+    transaction = null,
+    entryKind = "expense"
+  ) {
     if (
       transaction?.transfer_id ||
       transaction?.kind?.startsWith("transfer_")
@@ -252,19 +328,27 @@ export default function Transaction() {
     setForm(
       transaction
         ? {
-            account_id: String(transaction.account_id),
+            account_id: String(
+              transaction.account_id
+            ),
             kind: transaction.kind,
             category: transaction.category,
             amount: String(transaction.amount),
             txn_date: transaction.txn_date,
-            description: transaction.description || "",
+            description:
+              transaction.description || "",
           }
-        : newForm(entryKind, activeAccounts[0]?.id)
+        : newForm(
+            entryKind,
+            activeAccounts[0]?.id
+          )
     );
 
     setFormError("");
     setModalOpen(true);
   }
+
+  // Create or edit a transaction.
 
   async function saveTransaction(event) {
     event.preventDefault();
@@ -283,15 +367,20 @@ export default function Transaction() {
 
     if (
       !activeAccounts.some(
-        (account) => String(account.id) === form.account_id
+        (account) =>
+          String(account.id) === form.account_id
       )
     ) {
-      setFormError("Please select an active account.");
+      setFormError(
+        "Please select an active account."
+      );
       return;
     }
 
     if (!form.category.trim() || !form.txn_date) {
-      setFormError("Category and date are required.");
+      setFormError(
+        "Category and date are required."
+      );
       return;
     }
 
@@ -321,6 +410,7 @@ export default function Transaction() {
       setModalOpen(false);
       setEditing(null);
       setPage(0);
+
       setRevision((count) => count + 1);
 
       setNotice(
@@ -330,12 +420,15 @@ export default function Transaction() {
       );
     } catch (err) {
       setFormError(
-        err.message || "Could not save transaction."
+        err.message ||
+          "Could not save transaction."
       );
     } finally {
       setSaving(false);
     }
   }
+
+  // Delete a transaction.
 
   async function deleteTransaction() {
     if (!deleteTarget) return;
@@ -344,9 +437,12 @@ export default function Transaction() {
     setError("");
 
     try {
-      await api(`/transactions/${deleteTarget.id}`, {
-        method: "DELETE",
-      });
+      await api(
+        `/transactions/${deleteTarget.id}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       setDeleteTarget(null);
 
@@ -355,11 +451,16 @@ export default function Transaction() {
       }
 
       setRevision((count) => count + 1);
-      setNotice("Transaction deleted successfully.");
+
+      setNotice(
+        "Transaction deleted successfully."
+      );
     } catch (err) {
       setError(
-        err.message || "Unable to delete transaction."
+        err.message ||
+          "Unable to delete transaction."
       );
+
       setDeleteTarget(null);
     } finally {
       setSaving(false);
@@ -388,20 +489,28 @@ export default function Transaction() {
     search;
 
   const noAccount =
-    activeAccounts.length === 0 && !accountsError;
+    activeAccounts.length === 0 &&
+    !accountsError;
 
   return (
     <section className="txd-page">
+      {/* PAGE HEADER */}
+
       <header className="txd-header">
         <div>
           <span className="txd-eyebrow">
             MAXBUD / MONEY MANAGEMENT
           </span>
+
           <h1>Transactions</h1>
+
           <p>
-            Every income and expense, organised in one place.
+            Every income and expense, organised
+            in one place.
           </p>
         </div>
+
+        {/* THE ONLY ADD TRANSACTION BUTTON */}
 
         <button
           type="button"
@@ -413,35 +522,46 @@ export default function Transaction() {
         </button>
       </header>
 
+      {/* FINANCIAL SUMMARY */}
+
       <div className="txd-summary-grid">
         <SummaryCard
           label="Income this month"
           value={
             overview
-              ? formatMoney(monthlyIncome, unit)
+              ? formatMoney(
+                  monthlyIncome,
+                  unit
+                )
               : "—"
           }
           icon={ArrowDownLeft}
           tone="income"
           note="Recorded transactions"
         />
+
         <SummaryCard
           label="Expenses this month"
           value={
             overview
-              ? formatMoney(monthlyExpenses, unit)
+              ? formatMoney(
+                  monthlyExpenses,
+                  unit
+                )
               : "—"
           }
           icon={ArrowUpRight}
           tone="expense"
           note="Recorded transactions"
         />
+
         <SummaryCard
           label="Net cash flow"
           value={
             overview
               ? formatMoney(
-                  monthlyIncome - monthlyExpenses,
+                  monthlyIncome -
+                    monthlyExpenses,
                   unit
                 )
               : "—"
@@ -452,10 +572,17 @@ export default function Transaction() {
         />
       </div>
 
+      {/* SUCCESS MESSAGE */}
+
       {notice && (
-        <div className="txd-notice" role="status">
+        <div
+          className="txd-notice"
+          role="status"
+        >
           <Check size={17} />
+
           {notice}
+
           <button
             type="button"
             onClick={() => setNotice("")}
@@ -466,51 +593,64 @@ export default function Transaction() {
         </div>
       )}
 
+      {/* ACCOUNTS ERROR */}
+
       {accountsError && (
-        <div className="txd-alert" role="alert">
+        <div
+          className="txd-alert"
+          role="alert"
+        >
           <CircleAlert size={17} />
           {accountsError}
         </div>
       )}
 
+      {/* ACCOUNT REQUIRED */}
+
       {noAccount && (
         <div className="txd-account-alert">
           <CreditCard size={20} />
+
           <div>
-            <strong>Create an account first</strong>
+            <strong>
+              Create an account first
+            </strong>
+
             <p>
-              Transactions need a Cash, Bank or Wallet
-              account so MaxBud can track your balance.
+              Transactions need a Cash, Bank
+              or Wallet account so MaxBud
+              can track your balance.
             </p>
           </div>
+
           <Link to="/dashboard/accounts">
             Go to Accounts
           </Link>
         </div>
       )}
 
+      {/* TRANSACTION HISTORY */}
+
       <div className="txd-panel">
         <div className="txd-panel-head">
           <div>
             <h2>Transaction history</h2>
+
             <p>
-              Review, filter and manage your financial entries.
+              Review, filter and manage
+              your financial entries.
             </p>
           </div>
-          <button
-            type="button"
-            className="txd-refresh"
-            onClick={() =>
-              setRevision((value) => value + 1)
-            }
-          >
-            Refresh
-          </button>
         </div>
+
+        {/* NO REFRESH OR NEW TRANSACTION BUTTON */}
+
+        {/* SEARCH AND FILTERS */}
 
         <div className="txd-toolbar">
           <label className="txd-search">
             <Search size={17} />
+
             <input
               value={search}
               onChange={(event) =>
@@ -525,11 +665,16 @@ export default function Transaction() {
             value={accountFilter}
             aria-label="Filter by account"
             onChange={(event) => {
-              setAccountFilter(event.target.value);
+              setAccountFilter(
+                event.target.value
+              );
               setPage(0);
             }}
           >
-            <option value="">All accounts</option>
+            <option value="">
+              All accounts
+            </option>
+
             {accounts.map((account) => (
               <option
                 key={account.id}
@@ -542,12 +687,16 @@ export default function Transaction() {
 
           <label className="txd-date">
             <CalendarDays size={15} />
+
             <span>From</span>
+
             <input
               type="date"
               value={startDate}
               onChange={(event) => {
-                setStartDate(event.target.value);
+                setStartDate(
+                  event.target.value
+                );
                 setPage(0);
               }}
             />
@@ -555,16 +704,21 @@ export default function Transaction() {
 
           <label className="txd-date">
             <span>To</span>
+
             <input
               type="date"
               value={endDate}
               onChange={(event) => {
-                setEndDate(event.target.value);
+                setEndDate(
+                  event.target.value
+                );
                 setPage(0);
               }}
             />
           </label>
         </div>
+
+        {/* ALL / INCOME / EXPENSE FILTERS */}
 
         <div className="txd-filterline">
           <div
@@ -581,9 +735,13 @@ export default function Transaction() {
                 type="button"
                 key={value}
                 className={
-                  kind === value ? "selected" : ""
+                  kind === value
+                    ? "selected"
+                    : ""
                 }
-                onClick={() => setKindFilter(value)}
+                onClick={() =>
+                  setKindFilter(value)
+                }
               >
                 {label}
               </button>
@@ -602,15 +760,25 @@ export default function Transaction() {
           )}
         </div>
 
+        {/* ERROR */}
+
         {error && (
-          <div className="txd-alert" role="alert">
+          <div
+            className="txd-alert"
+            role="alert"
+          >
             <CircleAlert size={17} />
             {error}
           </div>
         )}
 
+        {/* TRANSACTIONS TABLE */}
+
         {loading ? (
-          <div className="txd-loading" role="status">
+          <div
+            className="txd-loading"
+            role="status"
+          >
             Loading transactions...
           </div>
         ) : visibleRows.length ? (
@@ -626,122 +794,161 @@ export default function Transaction() {
                   <th>Actions</th>
                 </tr>
               </thead>
+
               <tbody>
-                {visibleRows.map((transaction) => {
-                  const account = accounts.find(
-                    (item) =>
-                      item.id === transaction.account_id
-                  );
+                {visibleRows.map(
+                  (transaction) => {
+                    const account =
+                      accounts.find(
+                        (item) =>
+                          item.id ===
+                          transaction.account_id
+                      );
 
-                  const isIncome =
-                    transaction.kind === "income" ||
-                    transaction.kind === "transfer_in";
+                    const isIncome =
+                      transaction.kind ===
+                        "income" ||
+                      transaction.kind ===
+                        "transfer_in";
 
-                  const isTransfer =
-                    Boolean(transaction.transfer_id) ||
-                    transaction.kind.startsWith("transfer_");
+                    const isTransfer =
+                      Boolean(
+                        transaction.transfer_id
+                      ) ||
+                      transaction.kind?.startsWith(
+                        "transfer_"
+                      );
 
-                  return (
-                    <tr key={transaction.id}>
-                      <td>
-                        <span className="txd-identity">
-                          <span
-                            className={`txd-row-icon ${
-                              isIncome ? "income" : "expense"
-                            }`}
-                          >
-                            {isIncome ? (
-                              <ArrowDownLeft size={18} />
-                            ) : (
-                              <ArrowUpRight size={18} />
-                            )}
-                          </span>
-
-                          <span>
-                            <strong>
-                              {transaction.description ||
-                                (isTransfer
-                                  ? "Account transfer"
-                                  : isIncome
-                                  ? "Income"
-                                  : "Expense")}
-                            </strong>
-                            <small>
-                              {isTransfer
-                                ? "Transfer entry"
-                                : isIncome
-                                ? "Money in"
-                                : "Money out"}
-                            </small>
-                          </span>
-                        </span>
-                      </td>
-
-                      <td>
-                        <span className="txd-category">
-                          {transaction.category}
-                        </span>
-                      </td>
-
-                      <td>
-                        {account?.name ||
-                          `Account #${transaction.account_id}`}
-                      </td>
-
-                      <td>
-                        {formatDate(transaction.txn_date)}
-                      </td>
-
-                      <td
-                        className={`txd-amount ${
-                          isIncome ? "income" : "expense"
-                        }`}
+                    return (
+                      <tr
+                        key={transaction.id}
                       >
-                        {isIncome ? "+" : "−"}
-                        {formatMoney(
-                          transaction.amount,
-                          unit
-                        )}
-                      </td>
+                        <td>
+                          <span className="txd-identity">
+                            <span
+                              className={`txd-row-icon ${
+                                isIncome
+                                  ? "income"
+                                  : "expense"
+                              }`}
+                            >
+                              {isIncome ? (
+                                <ArrowDownLeft
+                                  size={18}
+                                />
+                              ) : (
+                                <ArrowUpRight
+                                  size={18}
+                                />
+                              )}
+                            </span>
 
-                      <td>
-                        <div className="txd-row-actions">
-                          {!isTransfer ? (
-                            <>
-                              <button
-                                type="button"
-                                title="Edit"
-                                aria-label={`Edit transaction ${transaction.id}`}
-                                onClick={() =>
-                                  openForm(transaction)
-                                }
-                              >
-                                <Pencil size={16} />
-                              </button>
+                            <span>
+                              <strong>
+                                {transaction.description ||
+                                  (isTransfer
+                                    ? "Account transfer"
+                                    : isIncome
+                                    ? "Income"
+                                    : "Expense")}
+                              </strong>
 
-                              <button
-                                type="button"
-                                title="Delete"
-                                aria-label={`Delete transaction ${transaction.id}`}
-                                onClick={() =>
-                                  setDeleteTarget(transaction)
-                                }
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </>
-                          ) : (
-                            <small>Linked</small>
+                              <small>
+                                {isTransfer
+                                  ? "Transfer entry"
+                                  : isIncome
+                                  ? "Money in"
+                                  : "Money out"}
+                              </small>
+                            </span>
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="txd-category">
+                            {transaction.category}
+                          </span>
+                        </td>
+
+                        <td>
+                          {account?.name ||
+                            `Account #${transaction.account_id}`}
+                        </td>
+
+                        <td>
+                          {formatDate(
+                            transaction.txn_date
                           )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        </td>
+
+                        <td
+                          className={`txd-amount ${
+                            isIncome
+                              ? "income"
+                              : "expense"
+                          }`}
+                        >
+                          {isIncome
+                            ? "+"
+                            : "−"}
+
+                          {formatMoney(
+                            transaction.amount,
+                            unit
+                          )}
+                        </td>
+
+                        <td>
+                          <div className="txd-row-actions">
+                            {!isTransfer ? (
+                              <>
+                                <button
+                                  type="button"
+                                  title="Edit"
+                                  aria-label={`Edit transaction ${transaction.id}`}
+                                  onClick={() =>
+                                    openForm(
+                                      transaction
+                                    )
+                                  }
+                                >
+                                  <Pencil
+                                    size={16}
+                                  />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  title="Delete"
+                                  aria-label={`Delete transaction ${transaction.id}`}
+                                  onClick={() =>
+                                    setDeleteTarget(
+                                      transaction
+                                    )
+                                  }
+                                >
+                                  <Trash2
+                                    size={16}
+                                  />
+                                </button>
+                              </>
+                            ) : (
+                              <small>
+                                Linked
+                              </small>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }
+                )}
               </tbody>
             </table>
           </div>
         ) : (
+          /* EMPTY STATE */
+
           <div className="txd-empty">
             <span className="txd-empty-icon">
               <ReceiptText size={27} />
@@ -759,19 +966,7 @@ export default function Transaction() {
                 : "Add your first income or expense to start tracking your money."}
             </p>
 
-            {!hasFilters &&
-              activeAccounts.length > 0 && (
-                <button
-                  type="button"
-                  className="txd-primary"
-                  onClick={() => openForm()}
-                >
-                  <Plus size={17} />
-                  Add your first transaction
-                </button>
-              )}
-
-            {!hasFilters && noAccount && (
+            {noAccount && (
               <Link
                 className="txd-primary"
                 to="/dashboard/accounts"
@@ -781,6 +976,8 @@ export default function Transaction() {
             )}
           </div>
         )}
+
+        {/* PAGINATION */}
 
         <div className="txd-pagination">
           <span>
@@ -792,7 +989,9 @@ export default function Transaction() {
           <div>
             <button
               type="button"
-              disabled={page === 0 || loading}
+              disabled={
+                page === 0 || loading
+              }
               onClick={() =>
                 setPage((old) => old - 1)
               }
@@ -803,7 +1002,9 @@ export default function Transaction() {
 
             <button
               type="button"
-              disabled={!hasNext || loading}
+              disabled={
+                !hasNext || loading
+              }
               onClick={() =>
                 setPage((old) => old + 1)
               }
@@ -815,12 +1016,15 @@ export default function Transaction() {
         </div>
       </div>
 
+      {/* ADD / EDIT TRANSACTION MODAL */}
+
       {modalOpen && (
         <div
           className="txd-overlay"
           onMouseDown={(event) => {
             if (
-              event.target === event.currentTarget &&
+              event.target ===
+                event.currentTarget &&
               !saving
             ) {
               setModalOpen(false);
@@ -838,6 +1042,7 @@ export default function Transaction() {
                 <span className="txd-eyebrow">
                   MONEY ENTRY
                 </span>
+
                 <h2 id="txd-form-title">
                   {editing
                     ? "Edit transaction"
@@ -848,20 +1053,29 @@ export default function Transaction() {
               <button
                 type="button"
                 aria-label="Close dialog"
-                onClick={() => setModalOpen(false)}
+                onClick={() =>
+                  setModalOpen(false)
+                }
                 disabled={saving}
               >
                 <X size={21} />
               </button>
             </div>
 
-            <form onSubmit={saveTransaction}>
+            <form
+              onSubmit={saveTransaction}
+            >
+              {/* INCOME / EXPENSE */}
+
               <div
                 className="txd-kind-picker"
                 role="group"
                 aria-label="Transaction type"
               >
-                {["expense", "income"].map((option) => (
+                {[
+                  "expense",
+                  "income",
+                ].map((option) => (
                   <button
                     type="button"
                     key={option}
@@ -881,20 +1095,32 @@ export default function Transaction() {
                       }))
                     }
                   >
-                    {option === "income" ? (
-                      <ArrowDownLeft size={18} />
+                    {option ===
+                    "income" ? (
+                      <ArrowDownLeft
+                        size={18}
+                      />
                     ) : (
-                      <ArrowUpRight size={18} />
+                      <ArrowUpRight
+                        size={18}
+                      />
                     )}
-                    {option === "income"
+
+                    {option ===
+                    "income"
                       ? "Income"
                       : "Expense"}
                   </button>
                 ))}
               </div>
 
+              {/* AMOUNT */}
+
               <label className="txd-form-field">
-                <span>Amount ({unit}) *</span>
+                <span>
+                  Amount ({unit}) *
+                </span>
+
                 <input
                   autoFocus
                   required
@@ -904,110 +1130,163 @@ export default function Transaction() {
                   onChange={(event) =>
                     setForm((old) => ({
                       ...old,
-                      amount: event.target.value,
+                      amount:
+                        event.target.value,
                     }))
                   }
                 />
               </label>
 
               <div className="txd-form-grid">
+                {/* ACCOUNT */}
+
                 <label className="txd-form-field">
-                  <span>Account *</span>
+                  <span>
+                    Account *
+                  </span>
+
                   <select
                     required
-                    value={form.account_id}
+                    value={
+                      form.account_id
+                    }
                     onChange={(event) =>
                       setForm((old) => ({
                         ...old,
-                        account_id: event.target.value,
+                        account_id:
+                          event.target.value,
                       }))
                     }
                   >
-                    <option value="">Select account</option>
+                    <option value="">
+                      Select account
+                    </option>
 
-                    {activeAccounts.map((account) => (
-                      <option
-                        key={account.id}
-                        value={account.id}
-                      >
-                        {account.name} (
-                        {formatMoney(
-                          account.current_balance,
-                          account.currency || unit
-                        )}
-                        )
-                      </option>
-                    ))}
+                    {activeAccounts.map(
+                      (account) => (
+                        <option
+                          key={
+                            account.id
+                          }
+                          value={
+                            account.id
+                          }
+                        >
+                          {account.name}
+                          {" ("}
+                          {formatMoney(
+                            account.current_balance,
+                            account.currency ||
+                              unit
+                          )}
+                          {")"}
+                        </option>
+                      )
+                    )}
                   </select>
                 </label>
 
+                {/* DATE */}
+
                 <label className="txd-form-field">
                   <span>Date *</span>
+
                   <input
                     required
                     type="date"
-                    value={form.txn_date}
+                    value={
+                      form.txn_date
+                    }
                     onChange={(event) =>
                       setForm((old) => ({
                         ...old,
-                        txn_date: event.target.value,
+                        txn_date:
+                          event.target.value,
                       }))
                     }
                   />
                 </label>
               </div>
 
+              {/* CATEGORY */}
+
               <label className="txd-form-field">
-                <span>Category *</span>
+                <span>
+                  Category *
+                </span>
+
                 <input
                   required
                   maxLength={60}
                   list="txd-categories"
-                  value={form.category}
+                  value={
+                    form.category
+                  }
                   onChange={(event) =>
                     setForm((old) => ({
                       ...old,
-                      category: event.target.value,
+                      category:
+                        event.target.value,
                     }))
                   }
                 />
+
                 <datalist id="txd-categories">
-                  {(form.kind === "income"
-                    ? incomeCategories
-                    : expenseCategories
+                  {(
+                    form.kind ===
+                    "income"
+                      ? incomeCategories
+                      : expenseCategories
                   ).map((category) => (
                     <option
-                      key={category}
-                      value={category}
+                      key={
+                        category
+                      }
+                      value={
+                        category
+                      }
                     />
                   ))}
                 </datalist>
               </label>
 
+              {/* OPTIONAL NOTE */}
+
               <label className="txd-form-field">
-                <span>Note (optional)</span>
+                <span>
+                  Note (optional)
+                </span>
+
                 <input
                   maxLength={255}
                   placeholder="What was this for?"
-                  value={form.description}
+                  value={
+                    form.description
+                  }
                   onChange={(event) =>
                     setForm((old) => ({
                       ...old,
-                      description: event.target.value,
+                      description:
+                        event.target.value,
                     }))
                   }
                 />
               </label>
 
+              {/* NO ACCOUNT MESSAGE */}
+
               {noAccount && (
                 <p className="txd-form-hint">
-                  You need an active account before
-                  saving.{" "}
+                  You need an active account
+                  before saving.{" "}
+
                   <Link to="/dashboard/accounts">
                     Create one here.
                   </Link>
                 </p>
               )}
+
+              {/* FORM ERROR */}
 
               {formError && (
                 <p
@@ -1018,10 +1297,14 @@ export default function Transaction() {
                 </p>
               )}
 
+              {/* MODAL ACTIONS */}
+
               <div className="txd-modal-actions">
                 <button
                   type="button"
-                  onClick={() => setModalOpen(false)}
+                  onClick={() =>
+                    setModalOpen(false)
+                  }
                   disabled={saving}
                 >
                   Cancel
@@ -1031,10 +1314,12 @@ export default function Transaction() {
                   className="txd-primary"
                   type="submit"
                   disabled={
-                    saving || activeAccounts.length === 0
+                    saving ||
+                    activeAccounts.length === 0
                   }
                 >
                   <Check size={17} />
+
                   {saving
                     ? "Saving..."
                     : editing
@@ -1047,6 +1332,8 @@ export default function Transaction() {
         </div>
       )}
 
+      {/* DELETE CONFIRMATION */}
+
       {deleteTarget && (
         <div className="txd-overlay">
           <section
@@ -1058,18 +1345,24 @@ export default function Transaction() {
             <span className="txd-delete-icon">
               <Trash2 size={25} />
             </span>
+
             <h2 id="txd-delete-title">
               Delete this transaction?
             </h2>
+
             <p>
-              This removes the entry from your history
-              and updates the tracked account balance.
+              This removes the entry
+              from your history and
+              updates the tracked
+              account balance.
             </p>
 
             <div className="txd-modal-actions">
               <button
                 type="button"
-                onClick={() => setDeleteTarget(null)}
+                onClick={() =>
+                  setDeleteTarget(null)
+                }
                 disabled={saving}
               >
                 Cancel
@@ -1079,7 +1372,9 @@ export default function Transaction() {
                 className="txd-danger"
                 type="button"
                 disabled={saving}
-                onClick={deleteTransaction}
+                onClick={
+                  deleteTransaction
+                }
               >
                 {saving
                   ? "Deleting..."

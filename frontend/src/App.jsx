@@ -6,6 +6,7 @@ import OnboardingPage from "./pages/onboarding/Onboarding";
 import Dashboard from "./pages/userdashboard/dashboard/Dashboard";
 import DashboardLayout from "./pages/userdashboard/layout/DashboardLayout";
 import { getAuthSession } from "./services/authApi";
+import FamilyPage from "./pages/userdashboard/family/FamilyPage";
 import Transaction from "./pages/userdashboard/transaction/Transaction";
 
 function ProtectedRoute({ children, needsOnboarding = false }) {
@@ -23,7 +24,8 @@ export default function App() {
     <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage/></ProtectedRoute>}/>
     <Route path="/dashboard" element={<ProtectedRoute needsOnboarding><DashboardLayout/></ProtectedRoute>}>
       <Route index element={<Dashboard/>}/>
-      {["accounts", "transactions", "budgets", "goals", "reminders", "reports", "ai-scan", "ai-advisor", "family", "settings"].map((path) => <Route key={path} path={path} element={<Dashboard/>}/>)}
+      <Route path="family" element={<FamilyPage/>}/>
+      {["accounts", "transactions", "budgets", "goals", "reminders", "reports", "ai-scan", "ai-advisor", "settings"].map((path) => <Route key={path} path={path} element={<Dashboard/>}/>)}
     </Route>
     <Route path="*" element={<Navigate to="/" replace/>}/>
     <Route path="transactions" element={<Transaction />} />

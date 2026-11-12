@@ -1,7 +1,9 @@
 from datetime import date
 from decimal import Decimal
+from typing import Literal
+from types import SimpleNamespace
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -14,7 +16,9 @@ from app.models.finance import (
     IncomeSource,
     Transaction,
 )
+from app.models.family import Family
 from app.models.user import User
+from app.services.family import active_users, get_family
 
 router = APIRouter(
     prefix="/dashboard",
@@ -47,9 +51,15 @@ def month_start(
 
 @router.get("")
 def get_dashboard(
+    scope: Literal["me", "family"] = "me",
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
+    family = None
+    user_ids = [user.id]
+    if scope == "family":
+        family = get_family(db, user, owner_only=True)
+        user_ids = [member.id for member in active_users(db, family)]
     today = date.today()
     first = today.replace(day=1)
 
@@ -61,26 +71,38 @@ def get_dashboard(
 
     accounts = db.scalars(
         select(Account).where(
-            Account.user_id == user.id
+            Account.user_id.in_(user_ids)
         )
     ).all()
 
+    if family and any(account.currency != "LKR" for account in accounts):
+        raise HTTPException(409, "Family totals require LKR accounts; currency conversion is not supported")
+
     income_sources = db.scalars(
         select(IncomeSource).where(
-            IncomeSource.user_id == user.id
+            IncomeSource.user_id.in_(user_ids)
         )
     ).all()
 
     budgets = db.scalars(
         select(Budget).where(
-            Budget.user_id == user.id
+            Budget.user_id.in_(user_ids)
         )
     ).all()
+
+    if family:
+        # Combine limits once per normalized category to avoid counting spending
+        # repeatedly when different members budget for the same category.
+        grouped = {}
+        for budget in budgets:
+            key = budget.category.strip().lower()
+            grouped[key] = grouped.get(key, ZERO) + Decimal(budget.monthly_limit)
+        budgets = [SimpleNamespace(category=key, monthly_limit=limit) for key, limit in grouped.items()]
 
     goals = db.scalars(
         select(Goal)
         .where(
-            Goal.user_id == user.id,
+            Goal.user_id.in_(user_ids),
             Goal.status == "active",
         )
         .order_by(Goal.id.desc())
@@ -93,8 +115,9 @@ def get_dashboard(
             func.sum(Transaction.amount),
         )
         .where(
-            Transaction.user_id == user.id,
+            Transaction.user_id.in_(user_ids),
             Transaction.deleted_at.is_(None),
+            Transaction.transfer_id.is_(None),
         )
         .group_by(Transaction.kind)
     ).all()
@@ -110,8 +133,9 @@ def get_dashboard(
             func.sum(Transaction.amount),
         )
         .where(
-            Transaction.user_id == user.id,
+            Transaction.user_id.in_(user_ids),
             Transaction.deleted_at.is_(None),
+            Transaction.transfer_id.is_(None),
             Transaction.txn_date >= first,
             Transaction.txn_date < next_first,
         )
@@ -139,8 +163,9 @@ def get_dashboard(
             func.sum(Transaction.amount),
         )
         .where(
-            Transaction.user_id == user.id,
+            Transaction.user_id.in_(user_ids),
             Transaction.deleted_at.is_(None),
+            Transaction.transfer_id.is_(None),
             Transaction.kind == "expense",
             Transaction.txn_date >= first,
             Transaction.txn_date < next_first,
@@ -249,15 +274,16 @@ def get_dashboard(
                 0,
             )
         ).where(
-            Goal.user_id == user.id
+            Goal.user_id.in_(user_ids)
         )
     )
 
     recent = db.scalars(
         select(Transaction)
         .where(
-            Transaction.user_id == user.id,
+            Transaction.user_id.in_(user_ids),
             Transaction.deleted_at.is_(None),
+            Transaction.transfer_id.is_(None),
             Transaction.kind.in_(
                 ["income", "expense"]
             ),
@@ -289,8 +315,9 @@ def get_dashboard(
             func.sum(Transaction.amount),
         )
         .where(
-            Transaction.user_id == user.id,
+            Transaction.user_id.in_(user_ids),
             Transaction.deleted_at.is_(None),
+            Transaction.transfer_id.is_(None),
             Transaction.txn_date >= first_chart_month,
             Transaction.txn_date < next_first,
         )
@@ -352,7 +379,10 @@ def get_dashboard(
         )
 
     return {
-        "currency": user.currency,
+        "currency": "LKR" if family else user.currency,
+        "scope": scope,
+        "can_view_family": db.scalar(select(Family.id).where(
+            Family.owner_user_id == user.id)) is not None,
         "onboarding_completed": user.onboarding_completed,
         "total_balance": money(total_balance),
         "monthly_income": money(monthly_income),
@@ -390,7 +420,7 @@ def get_dashboard(
                 "saved": money(goal.saved_amount),
                 "status": goal.status,
             }
-            for goal in goals
+            for goal in (goals if not family else [])
         ],
         "recent_transactions": [
             {
@@ -402,7 +432,7 @@ def get_dashboard(
                 "description": transaction.description,
                 "date": transaction.txn_date.isoformat(),
             }
-            for transaction in recent
+            for transaction in (recent if not family else [])
         ],
         "six_month_trend": six_month_trend,
     }

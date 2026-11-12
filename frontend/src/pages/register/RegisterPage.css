@@ -1,2 +1,608 @@
-/* Shared authentication presentation keeps both forms consistent. */
+
+/* ============================================
+   MAXBUD REGISTER PAGE
+   Same visual design as Login Page
+
+   Pastel Aqua: #B1E5E6
+   Soft Cream: #EEEAD7
+   Pastel Pink: #F7ADAD
+============================================ */
+
+/* Keep existing shared authentication styles */
 @import "../../styles/auth.css";
+
+/* ============================================
+   1. REGISTER PAGE BACKGROUND
+============================================ */
+
+/* Target Register page only */
+
+.auth-page:has(.auth-switch a[href="/login"]) {
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      ellipse at 15% 45%,
+      rgba(177, 229, 230, 0.35) 0%,
+      transparent 62%
+    ),
+    #EEEAD7;
+
+  padding: 30px;
+}
+
+/* ============================================
+   2. TWO-COLUMN LAYOUT
+============================================ */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-layout {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  width: min(1100px, calc(100% - 40px));
+
+  gap: 18px;
+  align-items: stretch;
+
+  margin-inline: auto;
+}
+
+/* ============================================
+   3. LEFT ILLUSTRATION PANEL
+============================================ */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-visual {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+  align-items: center;
+
+  min-height: 660px;
+  padding: 28px;
+
+  border-radius: 24px;
+
+  background: rgba(177, 229, 230, 0.70);
+
+  border: 1px solid
+    rgba(177, 229, 230, 0.65);
+
+  text-align: center;
+
+  overflow: hidden;
+}
+
+/* Back to Home */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-back {
+  position: absolute;
+
+  top: 27px;
+  left: 25px;
+
+  font-size: 13px;
+  color: #24484A;
+
+  text-decoration: none;
+  z-index: 2;
+}
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-back:hover {
+  text-decoration: underline;
+}
+
+/* Register illustration */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-visual img {
+  width: 88%;
+  max-width: 350px;
+  max-height: 300px;
+
+  object-fit: contain;
+
+  margin-bottom: 18px;
+}
+
+/* Illustration heading */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-visual h2 {
+  margin: 15px 0 7px;
+
+  font-size: 24px;
+  line-height: 1.3;
+
+  font-weight: 800;
+  color: #203D40;
+}
+
+/* Illustration subtitle */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-visual p {
+  margin: 0;
+
+  max-width: 360px;
+
+  color: #557477;
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ============================================
+   4. RIGHT REGISTER FORM PANEL
+============================================ */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-panel {
+  display: flex;
+
+  align-items: stretch;
+  justify-content: center;
+
+  min-width: 0;
+}
+
+/* Cream form card */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-card {
+  width: 100%;
+  min-height: 660px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  padding: 26px 35px;
+
+  border-radius: 24px;
+
+  background: rgba(248, 246, 237, 0.94);
+
+  border: 1px solid
+    rgba(177, 229, 230, 0.65);
+
+  box-shadow:
+    0 12px 30px
+    rgba(71, 125, 126, 0.08);
+}
+
+/* MaxBud logo */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-logo {
+  display: block;
+
+  width: 150px;
+  height: 70px;
+
+  object-fit: contain;
+
+  margin-bottom: 5px;
+}
+
+/* Register title */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-card h1 {
+  margin: 8px 0 7px;
+
+  font-size: 30px;
+  line-height: 1.25;
+
+  font-weight: 800;
+  color: #203D40;
+}
+
+/* Register subtitle */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-card > p:not(.auth-switch) {
+  margin: 0;
+
+  font-size: 13px;
+  line-height: 1.6;
+
+  color: #607B7B;
+}
+
+/* ============================================
+   5. REGISTER FORM SPACING
+============================================ */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-card form {
+  display: grid;
+
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-card form > label {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  color: #24484A;
+}
+
+/* ============================================
+   6. INPUT FIELDS
+============================================ */
+
+/* Same cream inputs as Login */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-input {
+  display: flex;
+
+  align-items: center;
+  gap: 12px;
+
+  min-height: 47px;
+
+  padding: 0 13px;
+
+  border-radius: 12px;
+
+  background: #F8F6ED !important;
+
+  border: 1px solid
+    rgba(120, 175, 176, 0.50);
+
+  color: #52777A;
+
+  overflow: hidden;
+
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+/* Input text */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-input input {
+  display: block;
+
+  flex: 1;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 45px;
+
+  padding: 10px 0;
+
+  background: transparent !important;
+
+  border: 0;
+  outline: none;
+
+  color: #24484A !important;
+  caret-color: #24484A;
+
+  font-size: 13px;
+}
+
+/* Placeholder */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-input input::placeholder {
+  color: #789091;
+  opacity: 1;
+}
+
+/* Input icons */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-input > svg {
+  flex-shrink: 0;
+  color: #52777A;
+}
+
+/* Password visibility button */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-input button {
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  padding: 5px;
+
+  background: transparent;
+  border: 0;
+
+  color: #52777A;
+
+  cursor: pointer;
+}
+
+/* Input focus */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-input:focus-within {
+  border-color: #85C9CB;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(177, 229, 230, 0.30);
+
+  outline: none;
+}
+
+/* ============================================
+   7. CHROME AUTOFILL FIX
+============================================ */
+
+.auth-page:has(.auth-switch a[href="/login"])
+input:-webkit-autofill,
+
+.auth-page:has(.auth-switch a[href="/login"])
+input:-webkit-autofill:hover,
+
+.auth-page:has(.auth-switch a[href="/login"])
+input:-webkit-autofill:focus {
+  -webkit-box-shadow:
+    0 0 0 1000px #F8F6ED inset !important;
+
+  -webkit-text-fill-color:
+    #24484A !important;
+
+  caret-color: #24484A;
+
+  transition:
+    background-color 9999s ease-out;
+}
+
+/* ============================================
+   8. CREATE ACCOUNT BUTTON
+============================================ */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-submit {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+
+  width: 100%;
+  min-height: 45px;
+
+  padding: 12px;
+
+  border-radius: 12px;
+
+  background: #B1E5E6 !important;
+
+  color: #24484A !important;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 16px
+    rgba(104, 161, 162, 0.16);
+}
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   9. GOOGLE REGISTER
+============================================ */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.google-divider {
+  display: flex;
+
+  align-items: center;
+  gap: 14px;
+
+  margin: 17px 0 13px;
+
+  color: #607B7B;
+  font-size: 12px;
+}
+
+.auth-page:has(.auth-switch a[href="/login"])
+.google-divider::before,
+
+.auth-page:has(.auth-switch a[href="/login"])
+.google-divider::after {
+  content: "";
+
+  flex: 1;
+  height: 1px;
+
+  background: rgba(32, 52, 58, 0.15);
+}
+
+.auth-page:has(.auth-switch a[href="/login"])
+.google-login-area {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+}
+
+/* Google setup message, if applicable */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.google-setup-notice {
+  width: 100%;
+
+  padding: 11px 16px;
+
+  background: #F8F6ED;
+
+  border: 1px solid
+    rgba(177, 229, 230, 0.65);
+
+  border-radius: 12px;
+
+  text-align: center;
+  font-size: 13px;
+}
+
+/* ============================================
+   10. ERROR MESSAGES
+============================================ */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-feedback {
+  padding: 11px 13px;
+
+  border-radius: 11px;
+
+  background:
+    rgba(247, 173, 173, 0.35);
+
+  color: #7E464A;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ============================================
+   11. LOGIN LINK AT BOTTOM
+============================================ */
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-switch {
+  margin-top: 18px;
+
+  text-align: center;
+
+  font-size: 12px;
+  line-height: 1.5;
+
+  color: #607B7B;
+}
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-switch a {
+  color: #367D7E;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.auth-page:has(.auth-switch a[href="/login"])
+.auth-switch a:hover {
+  text-decoration: underline;
+}
+
+/* ============================================
+   12. TABLET RESPONSIVE
+============================================ */
+
+@media (max-width: 800px) {
+  .auth-page:has(.auth-switch a[href="/login"])
+  .auth-layout {
+    grid-template-columns: 1fr;
+
+    max-width: 520px;
+
+    gap: 0;
+  }
+
+  .auth-page:has(.auth-switch a[href="/login"])
+  .auth-visual {
+    display: none;
+  }
+
+  .auth-page:has(.auth-switch a[href="/login"])
+  .auth-card {
+    min-height: auto;
+    padding: 28px 23px;
+  }
+}
+
+/* ============================================
+   13. MOBILE RESPONSIVE
+============================================ */
+
+@media (max-width: 460px) {
+  .auth-page:has(.auth-switch a[href="/login"]) {
+    padding: 15px;
+  }
+
+  .auth-page:has(.auth-switch a[href="/login"])
+  .auth-layout {
+    width: 100%;
+  }
+
+  .auth-page:has(.auth-switch a[href="/login"])
+  .auth-card {
+    padding: 24px 17px;
+    border-radius: 20px;
+  }
+
+  .auth-page:has(.auth-switch a[href="/login"])
+  .auth-card h1 {
+    font-size: 27px;
+  }
+
+  .auth-page:has(.auth-switch a[href="/login"])
+  .auth-card form {
+    gap: 12px;
+  }
+
+  .auth-page:has(.auth-switch a[href="/login"])
+  .auth-input {
+    min-height: 45px;
+  }
+}
+
+/* ============================================
+   14. ACCESSIBILITY
+============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-page:has(.auth-switch a[href="/login"])
+  .auth-submit,
+
+  .auth-page:has(.auth-switch a[href="/login"])
+  .auth-input,
+
+  .auth-page:has(.auth-switch a[href="/login"])
+  .auth-visual img {
+    animation: none;
+    transition: none;
+  }
+}

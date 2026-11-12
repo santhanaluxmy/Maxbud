@@ -1,0 +1,19 @@
+.family-page { display: grid; gap: 22px; }
+.family-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.family-overview dt { color: var(--text-muted, #626b6b); font-size: .85rem; }
+.family-overview dd { margin: 6px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.family-table-wrap { overflow-x: auto; margin-top: 18px; }
+.family-table { width: 100%; border-collapse: collapse; text-align: left; }
+.family-table th, .family-table td { padding: 14px 10px; border-bottom: 1px solid #b1e5e680; white-space: nowrap; }
+.family-table th { font-size: .8rem; color: #626b6b; }
+.family-feedback { padding: 15px; border-radius: 14px; background: #eeead7; overflow-wrap: anywhere; }
+.family-feedback button, .family-feedback a { margin-left: 12px; }
+.family-form { display: grid; gap: 14px; }
+.family-form label { display: grid; gap: 7px; font-weight: 600; }
+.family-form input { width: 100%; box-sizing: border-box; border: 1px solid #b1e5e6; border-radius: 12px; background: #eeead740; padding: 12px; color: inherit; font: inherit; }
+.family-form p { font-size: .9rem; }
+.family-form [role="alert"] { padding: 12px; background: #f7adad60; border-radius: 10px; }
+.family-actions { display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
+.family-page button:disabled { opacity: .55; cursor: not-allowed; }
+.family-form input:focus-visible, .family-page button:focus-visible { outline: 2px solid #448e88; outline-offset: 3px; }
+@media (max-width: 650px) { .family-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); } .family-page .db-page-intro { flex-wrap: wrap; gap: 15px; } }

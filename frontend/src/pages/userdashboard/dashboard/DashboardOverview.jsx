@@ -113,6 +113,8 @@ function GoalProgress({ goals, currency, loading, available }) {
 
 export default function DashboardOverview({ person }) {
   const [data, setData] = useState(null);
+  const [scope, setScope] = useState("me");
+  const [canViewFamily, setCanViewFamily] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -124,9 +126,9 @@ export default function DashboardOverview({ person }) {
       setLoading(true);
       setError(null);
       setAccountError("");
-      const [summary, accountList] = await Promise.allSettled([api("/dashboard", { signal: controller.signal }), api("/accounts", { signal: controller.signal })]);
+      const [summary, accountList] = await Promise.allSettled([api(`/dashboard?scope=${scope}`, { signal: controller.signal }), api("/accounts", { signal: controller.signal })]);
       if (controller.signal.aborted) return;
-      if (summary.status === "fulfilled" && summary.value && typeof summary.value === "object") setData(summary.value);
+      if (summary.status === "fulfilled" && summary.value && typeof summary.value === "object") { setData(summary.value); setCanViewFamily(summary.value.can_view_family === true); }
       else { setData(null); setError(summary.reason || new Error("The dashboard returned an empty response. Please retry.")); }
       if (accountList.status === "fulfilled") setAccounts(Array.isArray(accountList.value) ? accountList.value : accountList.value?.items || []);
       else { setAccounts([]); setAccountError(accountList.reason?.status === 401 ? "Your session has expired. Sign in again to load account names." : `Account names could not load. ${accountList.reason?.message || "Please retry."}`); }
@@ -134,7 +136,7 @@ export default function DashboardOverview({ person }) {
     }
     load();
     return () => controller.abort();
-  }, [revision]);
+  }, [revision, scope]);
 
   const firstName = person?.full_name?.trim().split(" ")[0] || "there";
   const currency = data?.currency || person?.currency || "LKR";
@@ -146,6 +148,8 @@ export default function DashboardOverview({ person }) {
 
   return <main className="ov-main" aria-busy={loading}>
     <section className="ov-welcome"><div><span className="ov-eyebrow">YOUR FINANCIAL OVERVIEW</span><h1>Welcome back, {firstName} <span className="ov-wave" role="img" aria-label="hello">👋</span></h1><p>Track, plan and grow your money with MaxBud.</p></div><img className="ov-piggy" src={piggyBank} alt="Piggy bank with coins and a growing savings chart"/><button className="ov-refresh" type="button" onClick={() => setRevision((value) => value + 1)} disabled={loading} aria-label="Refresh dashboard" title="Refresh dashboard"><RefreshCw size={17}/></button></section>
+    {canViewFamily && <label className="ov-goal-select">Dashboard scope<select aria-label="Dashboard scope" value={scope} onChange={(event) => { setData(null); setLoading(true); setScope(event.target.value); }}><option value="me">My Finances</option><option value="family">Family Finances</option></select></label>}
+    {scope === "family" && <p role="status">Family totals include active members. Individual transaction and goal details stay in personal dashboards.</p>}
     {error && <div className="ov-notice ov-notice-error" role="alert"><Info size={19}/><div><strong>{error.status === 401 ? "Your session has expired." : "We couldn't load your dashboard."}</strong><p>{error.message}</p></div>{error.status === 401 ? <Link to="/login">Sign in again <ArrowRight size={16}/></Link> : <button type="button" onClick={() => setRevision((value) => value + 1)}>Retry</button>}</div>}
     {accountError && !error && <div className="ov-notice" role="status"><Info size={18}/><span>{accountError} Account IDs are shown in the meantime.</span>{accountError.includes("expired") && <Link to="/login">Sign in again</Link>}</div>}
     <div className="ov-metrics">
@@ -157,6 +161,8 @@ export default function DashboardOverview({ person }) {
       </Metric>
     </div>
     <div className="ov-grid ov-chart-grid"><CashFlow rows={rows("six_month_trend")} currency={currency} loading={loading} available={available}/><Spending rows={rows("spending_by_category")} currency={currency} loading={loading} available={available}/></div>
-    <div className="ov-grid ov-bottom-grid"><RecentTransactions rows={rows("recent_transactions")} accounts={accounts} currency={currency} loading={loading} available={available}/><GoalProgress goals={rows("goals")} currency={currency} loading={loading} available={available}/></div>
+    {scope === "me" ? <div className="ov-grid ov-bottom-grid"><RecentTransactions rows={rows("recent_transactions")} accounts={accounts} currency={currency} loading={loading} available={available}/><GoalProgress goals={rows("goals")} currency={currency} loading={loading} available={available}/></div> : <Panel icon={PieIcon} title="Family budget overview" subtitle="Combined monthly budgets across active family members.">
+      {loading ? <Loading>Loading family budgets…</Loading> : !available ? <p>Family budgets unavailable.</p> : !rows("budgets").length ? <p>No family budgets yet.</p> : <div className="ov-table-scroll"><table className="ov-table"><thead><tr><th>Category</th><th>Budget</th><th>Spent</th><th>Remaining</th></tr></thead><tbody>{rows("budgets").map((budget) => <tr key={budget.category}><td>{titleCase(budget.category)}</td><td>{formatMoney(budget.limit, currency)}</td><td>{formatMoney(budget.spent, currency)}</td><td>{formatMoney(budget.remaining, currency)}</td></tr>)}</tbody></table></div>}
+    </Panel>}
   </main>;
 }

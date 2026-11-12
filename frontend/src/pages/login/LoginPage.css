@@ -323,3 +323,32 @@ input:-webkit-autofill:focus {
     transition: none;
   }
 }
+
+
+/* ==========================================
+   LOGIN BACKGROUND - MATCH REGISTER PAGE
+========================================== */
+
+/* Main page background */
+.auth-page:has(.auth-switch a[href="/register"]) {
+  background:
+    radial-gradient(
+      ellipse at 15% 45%,
+      rgba(177, 229, 230, 0.35) 0%,
+      transparent 62%
+    ),
+    #EEEAD7 !important;
+}
+
+/* Left illustration panel - same as Register */
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-visual {
+  background: rgba(177, 229, 230, 0.70) !important;
+}
+
+/* Right form panel - same as Register */
+.auth-page:has(.auth-switch a[href="/register"])
+.auth-card {
+  background: rgba(248, 246, 237, 0.94) !important;
+}
+

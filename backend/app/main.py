@@ -13,6 +13,8 @@ from app.routers import (
     onboarding,
     transaction,
 )
+from app.routers import budgets
+from app.routers import family
 
 
 settings = get_settings()
@@ -65,6 +67,8 @@ app.include_router(auth.router)
 app.include_router(onboarding.router)
 app.include_router(transaction.router)
 app.include_router(dashboard.router)
+app.include_router(budgets.router)
+app.include_router(family.router)
 
 
 @app.get("/health", tags=["Health"])
