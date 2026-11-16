@@ -23,6 +23,9 @@ def start_trial(db, user):
 
 def subscription_valid(sub, now=None):
     now = now or now_utc()
+    if sub and sub.source == 'test_access':
+        if get_settings().ENVIRONMENT not in {'development', 'test'} or sub.plan != 'family_pack' or sub.expires_at is None:
+            return False
     return bool(sub and sub.status in {"active","trialing","canceled"} and
                 (sub.status != "canceled" or sub.cancel_at_period_end) and
                 (sub.expires_at is None or sub.expires_at > now))
@@ -37,6 +40,8 @@ def entitlement(db, user):
     if legacy:
         plan="read_only" if sub.status in {"past_due","suspended"} else ("premium" if valid and sub.plan=="premium" else "free")
     sponsored_by=None
+    test_access = bool(sub and sub.source == 'test_access')
+    test_access_expires = sub.expires_at if test_access else None
     memberships=select(FamilyMembership.family_id).where(FamilyMembership.user_id==user.id,FamilyMembership.status=="active")
     families=db.scalars(select(Family).where(Family.id.in_(memberships), Family.is_active.is_(True))).all()
     for family in families:
@@ -44,6 +49,9 @@ def entitlement(db, user):
         if sponsor and sponsor.plan=="family_pack" and subscription_valid(sponsor,now):
             plan="family_pack" if family.owner_user_id==user.id else "premium_individual"
             sponsored_by=sponsor.user_id
+            if sponsor.source == 'test_access':
+                test_access = True
+                test_access_expires = sponsor.expires_at
             break
     if plan=="legacy_free": plan="free"
     status=(sub.status if valid or legacy or sub.status in {"past_due","suspended"} else "expired") if sub else "legacy"
@@ -54,6 +62,8 @@ def entitlement(db, user):
             "expires_at":sub.expires_at if sub else None,"cancel_at_period_end":bool(sub and sub.cancel_at_period_end),
             "pending_plan":sub.pending_plan if sub else None,"limits":PLAN_LIMITS[plan]}
     result["billing_status"]=status
+    result['test_access'] = test_access
+    result['test_access_expires_at'] = test_access_expires
     if sponsored_by is not None: result["status"]="active"
     remaining=(sub.trial_ends_at-now) if sub and sub.trial_ends_at and sub.trial_ends_at>now else timedelta(0)
     result["trial_days_remaining"]=remaining.days + int(bool(remaining.seconds or remaining.microseconds))

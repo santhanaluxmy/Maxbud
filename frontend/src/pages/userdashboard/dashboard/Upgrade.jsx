@@ -17,6 +17,7 @@ export default function Upgrade() {
   return <>
     <div className="db-page-intro"><div><span className="db-page-subtitle">YOUR MAXBUD MEMBERSHIP</span><h1>Subscription</h1><p>Personal tools for you. Shared tools for your household.</p></div></div>
     <p className="db-warning" role="note">Demo Payment — No real money will be charged.</p>
+    {data?.test_access && <p className="db-warning" role="note">TEST ACCESS — no payment. Temporary Family Pack access ends {new Date(data.test_access_expires_at + "Z").toLocaleString()}.</p>}
     {error && <p className="db-error" role="alert">{error}</p>}{message && <p role="status">{message}</p>}
     {!data ? <GlassCard><p role="status">{error ? "Membership could not load." : "Loading membership…"}</p><button className="db-outline-btn" onClick={() => run(async () => {})}>Retry</button></GlassCard> : <>
       <GlassCard className="subscription-status"><div><span className="db-page-subtitle">CURRENT ACCESS</span><h2>{labels[data.plan] || data.plan}</h2><p>{data.status}{data.source === "demo" ? " · SIMULATED / DEMO" : ""}</p>

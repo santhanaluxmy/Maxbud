@@ -137,7 +137,11 @@ export default function FamilyPage() {
     const saved = await familyAction(() => api(`/family/members/${member.id}/permissions`, { method: "PATCH", data: permissions }));
     if (!saved) setMembers(rows => rows.map(row => row.id === member.id ? member : row));
   }
-  useEffect(() => { api("/subscriptions").then(setSubscription).catch(error => setError(error.message)); }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    api("/subscriptions", { signal: controller.signal }).then(value => { if (!controller.signal.aborted) setSubscription(value); }).catch(error => { if (!controller.signal.aborted) setError(error.message); });
+    return () => controller.abort();
+  }, [revision]);
   useEffect(() => {
     if (!owner) return;
     let active = true;
@@ -151,6 +155,7 @@ export default function FamilyPage() {
     {!loading && !family && <p className="db-note">Getting started: choose Family Pack → create a household → invite by email and share the secure link → plan shared finances together.</p>}
     {error && <div className="family-feedback" role="alert">{error} <button type="button" onClick={() => { setLoading(true); setRevision((value) => value + 1); }}>Retry</button> <Link to="/login">Sign in</Link></div>}
     {notice && <p className="family-feedback" role="status">{notice}</p>}
+    {subscription?.test_access && <p className="db-warning" role="note">TEST ACCESS — no payment. Temporary Family Pack access ends {new Date(subscription.test_access_expires_at + "Z").toLocaleString()}.</p>}
     {loading ? <Loading>Loading family membership…</Loading> : family && <>
       <GlassCard title={family.name} subtitle="Family overview"><dl className="family-overview">
         {[["Plan", ({ family_pack: "Family Pack", premium: "Legacy Premium", free: "Legacy Free", read_only: "Read-only history" }[family.plan] || family.plan)], ["Owner", family.owner_name], ["Active members", family.total_active_members], ["Maximum members", family.max_members], ["Available slots", family.available_slots], ["Currency", family.currency]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
