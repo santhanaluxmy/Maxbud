@@ -53,3 +53,32 @@ test('unreachable server produces a usable error', async () => {
   globalThis.fetch = async () => { throw new TypeError('fetch failed'); };
   await assert.rejects(login('test@example.com', 'ExamplePassword123!'), /Cannot connect to MaxBud/);
 });
+
+test('remember me selects exactly one storage location', async () => {
+  const { saveAuthSession, getAuthSession } = await import('../src/services/authApi.js');
+  saveAuthSession(result, true);
+  assert.ok(localStorage.getItem('maxbud_auth'));
+  assert.equal(sessionStorage.getItem('maxbud_auth'), null);
+  assert.equal(getAuthSession().token, result.access_token);
+  saveAuthSession(result, false);
+  assert.ok(sessionStorage.getItem('maxbud_auth'));
+  assert.equal(localStorage.getItem('maxbud_auth'), null);
+});
+
+test('expired sessions are removed before protected navigation', async () => {
+  const { saveAuthSession, getAuthSession } = await import('../src/services/authApi.js');
+  const payload = Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) - 60 })).toString('base64url');
+  saveAuthSession({ ...result, access_token: `header.${payload}.signature` }, true);
+  assert.equal(getAuthSession(), null);
+  assert.equal(localStorage.getItem('maxbud_auth'), null);
+  assert.equal(sessionStorage.getItem('maxbud_auth'), null);
+});
+
+test('wrong password returns the backend error and leaves no previous session', async () => {
+  const { saveAuthSession } = await import('../src/services/authApi.js');
+  saveAuthSession(result, true);
+  globalThis.fetch = async () => Response.json({ detail: 'Invalid email or password' }, { status: 401 });
+  await assert.rejects(login('test@example.com', 'wrong'), /Invalid email or password/);
+  assert.equal(localStorage.getItem('maxbud_auth'), null);
+  assert.equal(sessionStorage.getItem('maxbud_auth'), null);
+});

@@ -10,6 +10,10 @@ from app.models.user import User
 
 
 class SharedFamilyTests(test_family.FamilyTests):
+    def setUp(self):
+        super().setUp()
+        self.enable_family_pack()
+
     def post(self, path, body, person=None):
         return self.client.post(path, headers=self.headers(person or self.owner), json=body)
 
@@ -57,7 +61,7 @@ class SharedFamilyTests(test_family.FamilyTests):
         self.assertEqual(self.get('/dashboard',member).json()['shared_savings_allocated'],'200.00')
         self.assertEqual(self.get('/goals').json(),[])
         self.assertEqual(self.get('/goals?scope=family',member).status_code,200)
-        self.assertEqual(self.get('/dashboard?scope=family',member).status_code,403)
+        self.assertEqual(self.get('/dashboard?scope=family',member).status_code,200)
         self.assertEqual(self.get('/accounts/'+str(owner_account['id']),member).status_code,404)
         self.assertEqual(self.remove(member['user']['id']).status_code,200)
         self.assertEqual(self.get('/goals?scope=family',member).status_code,404)
@@ -109,7 +113,8 @@ class SharedFamilyTests(test_family.FamilyTests):
 
     def test_inactive_members_keep_seats_and_cannot_contribute(self):
         member = self.login_member()
-        self.assertEqual(self.add('second').status_code,201)
+        for name in ['second', 'third', 'fourth', 'fifth']:
+            self.assertEqual(self.add(name).status_code, 201)
         goal = self.goal()
         self.db.get(User,member['user']['id']).is_active=False
         self.db.commit()
@@ -132,7 +137,7 @@ class SharedFamilyTests(test_family.FamilyTests):
         subscription.plan='premium'
         subscription.expires_at=datetime.utcnow()-timedelta(days=1)
         self.db.commit()
-        self.assertEqual(self.get('/family').json()['plan'],'free')
+        self.assertEqual(self.get('/family').json()['plan'],'read_only')
         self.assertEqual(Decimal(self.get('/goals?scope=family').json()[0]['saved_amount']),100)
         self.assertEqual(self.remove(self.owner['user']['id']).status_code,403)
 

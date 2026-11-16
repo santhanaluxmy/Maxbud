@@ -14,13 +14,8 @@ def shared_family(db, user, owner_only=False):
     # removed member's existing JWT cannot use a stale InnoDB snapshot.
     if user.id not in {member.id for member in active_users(db, family, lock=True)}:
         raise HTTPException(403, "Active family membership required")
-    # Keep legacy explicitly shared goal access; new households use the owner's
-    # granular permission grants for all shared records, including goals.
-    from app.models.family import Subscription
-    subscription = db.scalar(select(Subscription).where(Subscription.user_id == family.owner_user_id))
-    if subscription is not None and subscription.source is not None:
-        from app.services.household import access
-        access(db, user, owner=owner_only)
+    from app.services.household import access
+    access(db, user, owner=owner_only)
     return family
 
 

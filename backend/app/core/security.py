@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import jwt
 from pwdlib import PasswordHash
+from pwdlib.exceptions import UnknownHashError
 from app.core.config import get_settings
 
 hasher = PasswordHash.recommended()
@@ -11,7 +12,7 @@ def hash_password(password):
 def verify_password(password, hashed):
     try:
         return hasher.verify(password, hashed)
-    except (ValueError, TypeError):
+    except (UnknownHashError, ValueError, TypeError):
         return False
 
 def make_token(user_id):

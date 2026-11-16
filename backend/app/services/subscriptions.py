@@ -38,19 +38,17 @@ def entitlement(db, user):
         plan="read_only" if sub.status in {"past_due","suspended"} else ("premium" if valid and sub.plan=="premium" else "free")
     sponsored_by=None
     memberships=select(FamilyMembership.family_id).where(FamilyMembership.user_id==user.id,FamilyMembership.status=="active")
-    families=db.scalars(select(Family).where(Family.id.in_(memberships))).all()
+    families=db.scalars(select(Family).where(Family.id.in_(memberships), Family.is_active.is_(True))).all()
     for family in families:
         sponsor=db.scalar(select(Subscription).where(Subscription.user_id==(family.sponsor_user_id or family.owner_user_id)))
         if sponsor and sponsor.plan=="family_pack" and subscription_valid(sponsor,now):
             plan="family_pack" if family.owner_user_id==user.id else "premium_individual"
             sponsored_by=sponsor.user_id
             break
-        if sponsor and sponsor.source is None and sponsor.plan=="premium" and subscription_valid(sponsor,now):
-            plan="premium" # Preserve legacy household sponsorship without changing the member's billing.
     if plan=="legacy_free": plan="free"
     status=(sub.status if valid or legacy or sub.status in {"past_due","suspended"} else "expired") if sub else "legacy"
     result={"plan":plan,"billing_plan":sub.plan if sub else "free","status":status,
-            "can_edit":plan!="read_only","household_allowed":plan in {"family_pack","free","premium"},
+            "can_edit":plan!="read_only","household_allowed":sponsored_by is not None or plan=="family_pack",
             "sponsored_by":sponsored_by,"source":sub.source if sub else "legacy",
             "trial_started_at":sub.trial_started_at if sub else None,"trial_ends_at":sub.trial_ends_at if sub else None,
             "expires_at":sub.expires_at if sub else None,"cancel_at_period_end":bool(sub and sub.cancel_at_period_end),
@@ -68,20 +66,26 @@ def require_edit(db,user):
 
 
 def family_access(db,family,write=False):
-    sub=db.scalar(select(Subscription).where(Subscription.user_id==(family.sponsor_user_id or family.owner_user_id)))
-    legacy=bool(sub and sub.source is None and sub.plan in {"free","premium"})
+    statement = select(Subscription).where(Subscription.user_id == (family.sponsor_user_id or family.owner_user_id))
+    if write:
+        # Recheck the committed subscription after the household lock, rather
+        # than using an earlier repeatable-read snapshot or cached ORM object.
+        statement = statement.with_for_update().execution_options(populate_existing=True)
+    sub = db.scalar(statement)
     valid=bool(sub and sub.plan=="family_pack" and subscription_valid(sub))
-    if write and not (legacy or valid):
+    if write and not valid:
         raise HTTPException(403,"An active Family Pack sponsor is required for shared editing. Household history is preserved.")
-    return legacy, valid
+    if write:
+        from app.services.family import active_users
+        if len(active_users(db, family, lock=True, include_inactive=True)) > PLAN_LIMITS['family_pack']['family_members']:
+            raise HTTPException(409, 'Family Pack supports one owner and up to five other people. Remove extra memberships to resume shared editing; history is preserved.')
+    return False, valid
 
 
 def family_capacity(db,family):
-    legacy,_=family_access(db,family,write=True)
-    if legacy:
-        sub=db.scalar(select(Subscription).where(Subscription.user_id==family.owner_user_id))
-        return PLAN_LIMITS["premium" if sub.plan=="premium" and subscription_valid(sub) else "free"]["family_members"]
-    return get_settings().FAMILY_PACK_MEMBER_LIMIT
+    # Callers enforce subscription access before adding/accepting members.
+    # Reporting the limit must remain possible for oversized legacy households.
+    return PLAN_LIMITS['family_pack']['family_members']
 
 
 def catalog():

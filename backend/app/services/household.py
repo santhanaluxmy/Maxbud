@@ -115,6 +115,24 @@ def expense(db,user,family,data):
     return {'id':row.id,'already_recorded':False}
 
 
+def income(db, user, family, data):
+    previous, digest = replay(db, user, data.request_id, {
+        'operation': 'shared_income', **data.model_dump(mode='json'),
+    })
+    if previous:
+        return {'id': previous.transaction_id, 'already_recorded': True}
+    account = wallet(db, family, data.account_id)
+    if account.is_archived:
+        raise HTTPException(409, 'Restore this shared wallet before recording income')
+    row = Transaction(user_id=user.id, family_id=family.id, account_id=account.id,
+                      kind='income', category=data.category, amount=data.amount,
+                      description=data.description, txn_date=data.txn_date)
+    db.add(row)
+    db.flush()
+    request_record(db, user, data.request_id, digest, row)
+    return {'id': row.id, 'already_recorded': False}
+
+
 def debts(db,family):
     rows=db.execute(select(ExpenseShare,Transaction).join(Transaction,Transaction.id==ExpenseShare.transaction_id).where(Transaction.family_id==family.id,Transaction.deleted_at.is_(None)).order_by(ExpenseShare.id)).all()
     ids={uid for share,txn in rows for uid in [share.user_id,txn.user_id]}
@@ -159,6 +177,7 @@ def household_report(db,user,year=None,month=None):
     txns=db.scalars(select(Transaction).where(Transaction.family_id==family.id,Transaction.deleted_at.is_(None))).all()
     month=[t for t in txns if first<=t.txn_date<next_first]
     spending=sum((t.amount for t in month if t.kind=='expense'),ZERO)
+    earnings=sum((t.amount for t in month if t.kind=='income'),ZERO)
     funding=sum((t.amount for t in month if t.kind=='transfer_in'),ZERO)
     wallet_ids={w.id for w in wallets}
     wallet_spent=sum((t.amount for t in month if t.kind=='expense' and t.account_id in wallet_ids),ZERO)
@@ -183,16 +202,19 @@ def household_report(db,user,year=None,month=None):
     members=[]
     for uid in sorted(actors):
         rows=[t for t in txns if t.user_id==uid]
-        members.append({'user_id':uid,'full_name':names[uid],'income':'0.00','expenses':str(sum((t.amount for t in month if t.user_id==uid and t.kind=='expense'),ZERO)),
-                        'net_cash_flow':'0.00','wallet_funding':str(sum((t.amount for t in month if t.user_id==uid and t.kind=='transfer_in'),ZERO)),
+        member_income=sum((t.amount for t in month if t.user_id==uid and t.kind=='income'),ZERO)
+        member_expense=sum((t.amount for t in month if t.user_id==uid and t.kind=='expense'),ZERO)
+        members.append({'user_id':uid,'full_name':names[uid],'income':str(member_income),'expenses':str(member_expense),
+                        'net_cash_flow':str(member_income-member_expense),'wallet_funding':str(sum((t.amount for t in month if t.user_id==uid and t.kind=='transfer_in'),ZERO)),
                         'shared_goal_contributions':str(sum((Decimal(c['amount']) for g in goals for c in g['contributions'] if c['user_id']==uid),ZERO))})
     trends=[]
     for offset in range(-5,1):
         from app.routers.dashboard import month_start
         start=month_start(first.year,first.month,offset);end=month_start(start.year,start.month,1)
-        trends.append({'month':start.strftime('%Y-%m'),'income':'0.00','wallet_funding':str(sum((t.amount for t in txns if t.kind=='transfer_in' and start<=t.txn_date<end),ZERO)),'expenses':str(sum((t.amount for t in txns if t.kind=='expense' and start<=t.txn_date<end),ZERO))})
+        trends.append({'month':start.strftime('%Y-%m'),'income':str(sum((t.amount for t in txns if t.kind=='income' and start<=t.txn_date<end),ZERO)),'wallet_funding':str(sum((t.amount for t in txns if t.kind=='transfer_in' and start<=t.txn_date<end),ZERO)),'expenses':str(sum((t.amount for t in txns if t.kind=='expense' and start<=t.txn_date<end),ZERO))})
     return {'scope':'family','shared_only':True,'currency':'LKR','onboarding_completed':user.onboarding_completed,'can_view_family':True,
-        'total_balance':str(balance),'monthly_income':'0.00','monthly_expenses':str(spending),'monthly_wallet_funding':str(funding),'monthly_net_cash_flow':str(funding-wallet_spent),
+        'total_balance':str(balance),'monthly_income':str(earnings),'monthly_expenses':str(spending),'monthly_wallet_funding':str(funding),'monthly_net_cash_flow':str(earnings-spending),
+        'monthly_wallet_net_movement':str(earnings+funding-wallet_spent),
         'safe_to_spend_estimate':None if uncertain else str(max(ZERO,balance-reserve)),
         'safe_to_spend_note':'Unavailable: shared goal allocations may be held outside shared wallets.' if uncertain else 'Shared wallet funds less unpaid shared commitments; personal funds and reimbursements excluded.',
         'spending_by_category':[{'category':k,'amount':str(v)} for k,v in categories.items()],'budgets':budgets,'goals':[],

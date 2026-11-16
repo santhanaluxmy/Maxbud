@@ -139,11 +139,8 @@ def record_contribution(db, user, goal_id, data):
         from app.services.subscriptions import family_access
         family_access(db, family, write=True)
         require_shared_currency(db, family, user)
-        from app.models.family import Subscription
-        subscription = db.scalar(select(Subscription).where(Subscription.user_id == family.owner_user_id))
-        if subscription is not None and subscription.source is not None:
-            from app.services.household import access
-            access(db, user, write=True)
+        from app.services.household import access
+        access(db, user, write=True)
         if not data.request_id:
             raise HTTPException(422, "A submission request_id is required for shared contributions")
         previous = db.scalar(select(GoalContribution).where(GoalContribution.user_id == user.id, GoalContribution.request_id == data.request_id).with_for_update())

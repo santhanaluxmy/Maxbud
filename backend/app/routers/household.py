@@ -201,6 +201,40 @@ class Split(Clean):
     value:Decimal | None=Field(default=None,ge=0,max_digits=14,decimal_places=4)
 
 
+class SharedIncome(Clean):
+    account_id: int = Field(gt=0)
+    category: str = Field(min_length=1, max_length=60)
+    amount: Decimal = Field(gt=0, max_digits=14, decimal_places=2)
+    description: str = Field(default='', max_length=255)
+    txn_date: date = Field(default_factory=date.today)
+    request_id: str = Field(min_length=1, max_length=36)
+
+
+@router.post('/income', status_code=201)
+def income(data: SharedIncome, user: User=Depends(current_user), db: Session=Depends(get_db)):
+    try:
+        family = service.access(db, user, write=True)
+        result = service.income(db, user, family, data)
+        db.commit()
+        return result
+    except Exception:
+        db.rollback()
+        raise
+
+
+@router.get('/income')
+def income_history(user: User=Depends(current_user), db: Session=Depends(get_db)):
+    family = service.access(db, user)
+    rows = db.scalars(select(Transaction).where(
+        Transaction.family_id == family.id, Transaction.kind == 'income',
+        Transaction.deleted_at.is_(None),
+    ).order_by(Transaction.txn_date.desc(), Transaction.id.desc()).limit(100)).all()
+    return [{'id': t.id, 'recorded_by_id': t.user_id,
+             'recorded_by_name': db.get(User, t.user_id).full_name,
+             'category': t.category, 'amount': str(t.amount),
+             'description': t.description, 'date': t.txn_date} for t in rows]
+
+
 class Expense(Clean):
     account_id:int=Field(gt=0)
     category:str=Field(min_length=1,max_length=60)

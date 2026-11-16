@@ -47,7 +47,7 @@ def serve():
 
     app.router.lifespan_context = lifespan
     app.dependency_overrides[get_db] = session
-    uvicorn.run(app, host='127.0.0.1', port=8768, log_level='warning')
+    uvicorn.run(app, host='127.0.0.1', port=int(os.environ.get('CORE_FLOW_API_PORT', '8768')), log_level=os.environ.get('CORE_FLOW_LOG_LEVEL', 'warning'))
 
 
 def stop(process):

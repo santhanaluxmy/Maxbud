@@ -6,7 +6,7 @@ Existing React/Vite + FastAPI + MySQL personal and household budget application.
 
 Backend: `cd backend`, activate `.venv`, install `requirements.txt`, then `uvicorn app.main:app --reload`. Frontend: `cd frontend`, `npm ci`, `npm run dev`. Configure the existing private environment files; never commit credentials. Run migrations only after reviewing [DATABASE_AUDIT.md](DATABASE_AUDIT.md). This repository contains two Alembic branches: use `alembic upgrade maxbud_features@head`, never `upgrade heads` against this existing database.
 
-New users receive three calendar months of personal trial access, without an automatic household. Expired access retains history and JSON export. Legacy Free/Premium subscriptions are grandfathered. Family Pack sponsors one household with six total users by default. Membership never grants access to private salaries or accounts.
+New users receive three calendar months of personal trial access, without an automatic household. Expired access retains history and JSON export. Legacy Free/Premium personal entitlements are retained. Shared household editing requires an active Family Pack for every account, including legacy households. Family Pack supports one owner and up to five invited people (six total users). Membership never grants access to private salaries or accounts.
 
 ## Connected local workflow
 
@@ -27,3 +27,5 @@ Groq requires `GROQ_API_KEY`, `GROQ_VISION_MODEL`, `GROQ_CHAT_MODEL`. Upload rec
 See [TEST_REPORT.md](TEST_REPORT.md) for actual results, [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for the 10-person beta checklist, and [MAXBUD_HANDOFF.md](MAXBUD_HANDOFF.md) for status and remaining gates. Module details: [FAMILY_MANAGEMENT.md](FAMILY_MANAGEMENT.md), [SUBSCRIPTION_IMPLEMENTATION.md](SUBSCRIPTION_IMPLEMENTATION.md), [GROQ_AI_INTEGRATION.md](GROQ_AI_INTEGRATION.md), [ADMIN_SECURITY.md](ADMIN_SECURITY.md).
 
 No production deployment or real-user beta participation is claimed.
+
+Family Pack sharing, common income/expenses, private ledgers and current verification: [docs/MAXBUD_FAMILY_PACK_FLOW.md](docs/MAXBUD_FAMILY_PACK_FLOW.md).

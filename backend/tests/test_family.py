@@ -84,10 +84,35 @@ class FamilyTests(unittest.TestCase):
     def get(self, path, person=None):
         return self.client.get(path, headers=self.headers(person or self.owner))
 
+    def enable_family_pack(self, person=None):
+        """Explicit paid-period fixture; never runs against genuine data."""
+        person = person or self.owner
+        subscription = self.db.scalar(select(Subscription).where(Subscription.user_id == person['user']['id']))
+        subscription.plan = 'family_pack'; subscription.status = 'active'; subscription.source = 'demo'
+        subscription.expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=30)
+        family = self.db.scalar(select(Family).where(Family.owner_user_id == person['user']['id']))
+        family.sponsor_user_id = person['user']['id']
+        self.db.commit()
+
     def add(self, name, person=None):
-        return self.client.post("/family/members", headers=self.headers(person or self.owner), json=self.payload(name))
+        person = person or self.owner
+        invite = self.client.post('/family/invitations', headers=self.headers(person), json={
+            'email': self.email(name), 'can_view_shared': True, 'can_add_shared': True,
+        })
+        if invite.status_code != 201:
+            return invite
+        registered = self.client.post('/auth/register', json=self.payload(name))
+        if registered.status_code == 201:
+            accepted = self.client.post('/family/invitations/respond', headers=self.headers(registered.json()), json={
+                'token': invite.json()['token'], 'accept': True,
+            })
+            self.assertEqual(accepted.status_code, 200, accepted.text)
+        if registered.status_code != 201:
+            self.client.delete(f"/family/invitations/{invite.json()['id']}", headers=self.headers(person))
+        return registered
 
     def login_member(self, name="member"):
+        self.enable_family_pack()
         response = self.add(name)
         self.assertEqual(response.status_code, 201, response.text)
         login = self.client.post("/auth/login", json={"email": self.email(name), "password": "SecurePassword1!"})
@@ -99,7 +124,7 @@ class FamilyTests(unittest.TestCase):
 
     def test_registration_overview_and_refresh(self):
         info = self.get("/family").json()
-        self.assertEqual((info["plan"], info["currency"], info["role"], info["max_members"], info["available_slots"]), ("free", "LKR", "owner", 3, 2))
+        self.assertEqual((info["plan"], info["currency"], info["role"], info["max_members"], info["available_slots"]), ("free", "LKR", "owner", 0, 0))
         self.assertEqual(self.owner["user"]["role"], "owner")
         before = self.db.scalar(select(Family.id).where(Family.owner_user_id == self.owner["user"]["id"]))
         for _ in range(2):
@@ -110,7 +135,7 @@ class FamilyTests(unittest.TestCase):
 
     def test_member_login_list_and_password_safety(self):
         member = self.login_member()
-        self.assertEqual(member["user"]["role"], "member")
+        self.assertEqual(member["user"]["role"], "user")
         listing = self.get("/family/members").json()
         self.assertEqual(len(listing), 2)
         self.assertNotIn("password", str(listing))
@@ -122,6 +147,7 @@ class FamilyTests(unittest.TestCase):
 
     def test_member_and_cross_family_authorization(self):
         member = self.login_member()
+        self.client.patch(f"/family/members/{member['user']['id']}/permissions", json={'can_view_shared': False, 'can_add_shared': False}, headers=self.headers(self.owner))
         for path in ["/dashboard?scope=family"]:
             self.assertEqual(self.get(path, member).status_code, 403)
         self.assertEqual(self.add("denied", member).status_code, 403)
@@ -132,31 +158,37 @@ class FamilyTests(unittest.TestCase):
         self.assertEqual(self.remove(999999).status_code, 404)
 
     def test_free_limit(self):
-        self.assertEqual(self.add("one").status_code, 201)
-        self.assertEqual(self.add("two").status_code, 201)
-        self.assertEqual(self.add("three").status_code, 409)
-        self.assertEqual(self.get("/family").json()["available_slots"], 0)
+        self.assertEqual(self.add("one").status_code, 403)
+        self.assertEqual(self.get("/family").json()["max_members"], 0)
+        self.assertEqual(self.get("/subscriptions").json()["household_allowed"], False)
 
     def test_premium_limit_and_expiration(self):
         subscription = self.db.scalar(select(Subscription).where(Subscription.user_id == self.owner["user"]["id"]))
         subscription.plan = "premium"
         self.db.commit()
-        for i in range(6):
-            self.assertEqual(self.add(f"premium{i}").status_code, 201)
+        self.assertEqual(self.add("premium-member").status_code, 403)
+        self.enable_family_pack()
+        for i in range(5):
+            self.assertEqual(self.add(f"member{i}").status_code, 201)
         self.assertEqual(self.add("overflow").status_code, 409)
-        self.assertEqual(self.get("/family").json()["max_members"], 7)
+        self.assertEqual(self.get("/family").json()["max_members"], 6)
         subscription.expires_at = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=1)
         self.db.commit()
-        self.assertEqual(self.get("/family").json()["plan"], "free")
+        self.assertFalse(self.get("/family").json()["can_edit_shared"])
+        self.assertEqual(self.add("expired").status_code, 403)
 
     def test_invalid_and_duplicate_inputs(self):
+        self.enable_family_pack()
         self.assertEqual(self.add("owner").status_code, 409)
         self.assertEqual(self.add("other").status_code, 409)
-        for changes in [{"full_name": "  "}, {"full_name": "x" * 101}, {"email": "bad"},
-                        {"password": "weak", "confirm_password": "weak"}, {"confirm_password": "wrong"}]:
-            response = self.client.post("/family/members", headers=self.headers(self.owner), json=self.payload("invalid") | changes)
+        for body in [{'email': 'bad', 'can_view_shared': True, 'can_add_shared': True},
+                     {'email': self.email('invalid'), 'can_view_shared': False, 'can_add_shared': True}]:
+            response = self.client.post('/family/invitations', headers=self.headers(self.owner), json=body)
             self.assertEqual(response.status_code, 422, response.text)
-        self.assertEqual(len(self.get("/family/members").json()), 1)
+        # Owners must invite members; they never choose another person's password.
+        response = self.client.post('/family/members', headers=self.headers(self.owner), json=self.payload('invalid'))
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(len(self.get('/family/members').json()), 1)
 
     def financial_data(self, person, income, expense):
         uid = person["user"]["id"]
@@ -215,7 +247,7 @@ class FamilyTests(unittest.TestCase):
         self.assertIsNotNone(self.db.scalar(select(Budget).where(Budget.user_id == uid)))
         self.assertIsNotNone(self.db.scalar(select(Goal).where(Goal.user_id == uid)))
         self.assertEqual(self.get("/dashboard?scope=family").json()["monthly_income"], "0.00")
-        self.assertEqual(self.get("/family").json()["available_slots"], 2)
+        self.assertEqual(self.get("/family").json()["available_slots"], 5)
         self.assertEqual(self.remove(uid).status_code, 404)
 
     def test_expired_and_inactive_auth(self):

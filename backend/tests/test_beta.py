@@ -179,7 +179,7 @@ class BetaTests(test_family.FamilyTests):
         self.assertEqual(self.get('/family/wallets',self.other).status_code,200)
         # Another legacy owner sees only their own empty household, never this wallet.
         self.assertEqual(self.get('/family/wallets',self.other).json(),[])
-        self.assertEqual(self.post(f"/family/wallets/{wallet['id']}/contribute",{'account_id':own['id'],'amount':'1','request_id':'foreign'},self.other).status_code,404)
+        self.assertEqual(self.post(f"/family/wallets/{wallet['id']}/contribute",{'account_id':own['id'],'amount':'1','request_id':'foreign'},self.other).status_code,403)
 
     def test_equal_split_partial_reimbursement_does_not_duplicate_expense(self):
         owner,member,_=self.household();own=self.account(owner,'20000');paid=self.account(member,'20000')

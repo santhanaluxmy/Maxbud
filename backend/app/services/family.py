@@ -32,7 +32,7 @@ def get_family(db: Session, user: User, *, owner_only=False, lock=False) -> Fami
     if not families:
         raise HTTPException(403 if owner_only else 404,
                             "Family owner access required" if owner_only else
-                            "No active family membership. Legacy accounts require the documented family backfill.")
+                            "No active household membership. Create a household with Family Pack or accept an invitation.")
     if len(families) != 1:
         raise HTTPException(409, "Multiple family relationships require administrator review")
     return families[0]
@@ -72,7 +72,7 @@ def overview(db: Session, family: Family, user: User) -> dict:
     from app.services.subscriptions import family_capacity
     plan = family_plan(db, family)
     total = len(active_users(db, family, include_inactive=True))
-    maximum = family_capacity(db, family) if plan in {"free","premium","family_pack"} else 0
+    maximum = family_capacity(db, family) if plan == "family_pack" else 0
     owner = db.get(User, family.owner_user_id)
     from app.services.subscriptions import family_access
     legacy, sponsored = family_access(db,family)
@@ -82,7 +82,7 @@ def overview(db: Session, family: Family, user: User) -> dict:
     pending=len(db.scalars(select(FamilyInvitation.id).where(FamilyInvitation.family_id==family.id,FamilyInvitation.status=='pending',FamilyInvitation.expires_at>datetime.now(timezone.utc).replace(tzinfo=None))).all())
     return {"can_view_shared":is_owner or bool(membership and membership.can_view_shared),
             "can_add_shared":is_owner or bool(membership and membership.can_add_shared),
-            "can_edit_shared":legacy or sponsored,"legacy_member_creation":legacy,
+            "can_edit_shared":sponsored and total <= maximum,"legacy_member_creation":False,
             "id": family.id, "name": family.name, "plan": plan, "currency": "LKR",
             "owner_name": owner.full_name, "owner_id": owner.id,
             "role": "owner" if user.id == owner.id else "member",

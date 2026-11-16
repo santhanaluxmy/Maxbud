@@ -87,6 +87,7 @@ class CoreFinanceTests(test_family.FamilyTests):
 
     def test_personal_and_shared_contribution_keys_cannot_conflict(self):
         personal = self.goal()
+        self.enable_family_pack()
         shared = self.goal(scope='family')
         payload = {'amount': '10', 'request_id': 'cross-scope'}
         self.assertEqual(self.post(f'/goals/{personal}/contribute', payload).status_code, 200)
