@@ -1,6 +1,7 @@
 import AdvisorMessage from "./AdvisorMessage";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../../api/client";
+import { apiUrl } from "../../../api/base.js";
 import { getAuthSession } from "../../../services/authApi";
 import { ArrowUp, Sparkles, MessageCircle, ArrowRight, ScanLine } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -64,7 +65,7 @@ export default function AI({ mode }) {
       <GlassCard><form className="db-modal-form" onSubmit={e => { e.preventDefault(); run(async () => {
         if (!file || file.size > 5 * 1024 * 1024 || !["image/jpeg", "image/png"].includes(file.type)) throw new Error("Choose a JPG or PNG under 5 MB.");
         const data = new FormData(); data.append("file", file);
-        const response = await fetch(`${(import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "")}/ai/receipts`, { method: "POST", headers: { Authorization: `Bearer ${getAuthSession()?.token}` }, body: data });
+        const response = await fetch(apiUrl("/ai/receipts"), { method: "POST", headers: { Authorization: `Bearer ${getAuthSession()?.token}` }, body: data });
         const result = await response.json(); if (!response.ok) throw new Error(typeof result.detail === "string" ? result.detail : "Receipt scan failed");
         setReceipt(result); if (result.status === "confirmed") setMessage("This receipt already has a saved transaction.");
       }); }}>

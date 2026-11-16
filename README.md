@@ -8,6 +8,16 @@ Backend: `cd backend`, activate `.venv`, install `requirements.txt`, then `uvico
 
 New users receive three calendar months of personal trial access, without an automatic household. Expired access retains history and JSON export. Legacy Free/Premium subscriptions are grandfathered. Family Pack sponsors one household with six total users by default. Membership never grants access to private salaries or accounts.
 
+## Connected local workflow
+
+Start FastAPI from `backend` with `.venv/bin/python -m uvicorn app.main:app --reload` and Vite from `frontend` with `npm run dev`. Keep database credentials and the JWT secret in the existing private `backend/.env`. No database password or AI key belongs in a frontend variable.
+
+All frontend clients share one API URL. Without an override, `/api` goes through Vite to `http://127.0.0.1:8000`; `API_PROXY_TARGET` changes that local target. An existing `VITE_API_URL` (or legacy `VITE_BACKEND_URL`) overrides the proxy for a separately hosted API. Restart Vite after environment changes. Production hosting needs either the public `VITE_API_URL` or a reverse proxy forwarding `/api` to FastAPI. The Vite proxy is only a development/preview service.
+
+Register, complete the five onboarding steps, and use Accounts, Transactions, Budgets, Savings Goals, Reminders and Reports. Accounts now includes **Transfer money** between two active accounts. Transactions and transfers update tracked balances; goal contributions reserve savings without moving account money; marking a reminder paid creates its expense. Reports read the persisted ledger.
+
+The new core-flow verification and remaining limitations are documented in [docs/MAXBUD_CORE_FLOW_IMPLEMENTATION.md](docs/MAXBUD_CORE_FLOW_IMPLEMENTATION.md). From `backend`, run `FAMILY_TEST_MYSQL=0 .venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v` for disposable SQLite regressions, and `.venv/bin/python tests/core_flow_browser.py` for the browser → proxy → API → temporary database journey (requires existing Playwright and Chrome). The browser test restarts its own API to verify persistence; it never seeds genuine MySQL data.
+
 Demo checkout is disabled by default. An operator can supply `DEMO_PAYMENTS_ENABLED=true` for local/controlled-beta simulation. No money is charged; no real payment integration exists. Production rejects unrestricted demo activation. Prices come from `PLAN_PRICES_JSON`, not invented defaults.
 
 Groq requires `GROQ_API_KEY`, `GROQ_VISION_MODEL`, `GROQ_CHAT_MODEL`. Upload receipts through the existing scanner, review extracted fields, choose an existing category and account, then confirm. Missing printed totals remain null; calculated item subtotals are separately labelled. AI never directly executes financial writes.

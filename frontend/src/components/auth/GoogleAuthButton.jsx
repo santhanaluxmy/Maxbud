@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { apiUrl } from "../../api/base.js";
 
 export default function GoogleAuthButton({ onSuccess }) {
   const buttonRef = useRef(null);
@@ -16,9 +17,8 @@ export default function GoogleAuthButton({ onSuccess }) {
     const startedAt = Date.now();
 
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    const backendUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 
-    if (!clientId || !backendUrl) {
+    if (!clientId) {
       return;
     }
 
@@ -51,7 +51,7 @@ export default function GoogleAuthButton({ onSuccess }) {
 
           try {
             const response = await fetch(
-              `${backendUrl.replace(/\/$/, "")}/auth/google`,
+              apiUrl("/auth/google"),
               {
                 method: "POST",
                 headers: {

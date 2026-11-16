@@ -18,9 +18,11 @@ from app.schemas.account import (
     TransferOut,
 )
 from app.services.account import (
+    account_balance,
     account_response,
     owned_account,
     record_transfer,
+    validate_balance_correction,
 )
 
 router = APIRouter(tags=["Accounts"])
@@ -128,12 +130,15 @@ def update_account(
             lock=True,
         )
 
+        previous_balance = account_balance(db, account, lock_entries=True)
+
         for key, value in data.model_dump(
             exclude_unset=True,
         ).items():
             setattr(account, key, value)
 
         db.flush()
+        validate_balance_correction(db, account, previous_balance)
         result = account_response(db, account)
         db.commit()
 

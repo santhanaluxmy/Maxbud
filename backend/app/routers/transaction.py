@@ -17,6 +17,7 @@ from app.services.account import (
     account_balance,
     owned_account,
     usable_account,
+    validate_balance_correction,
 )
 
 router = APIRouter(
@@ -101,12 +102,23 @@ def validate_expense_balance(
         )
 
 
-def editable(transaction: Transaction) -> None:
+def editable(db: Session, transaction: Transaction) -> None:
     if transaction.transfer_id is not None:
         raise HTTPException(
             409,
             "A linked transfer entry cannot be edited or deleted separately",
         )
+    from app.models.ai import AIScan
+    from app.models.reminder import ReminderPayment
+
+    if db.scalar(select(ReminderPayment.id).where(
+        ReminderPayment.transaction_id == transaction.id,
+    ).limit(1)) is not None:
+        raise HTTPException(409, "A bill payment cannot be edited or deleted separately from its reminder")
+    if db.scalar(select(AIScan.id).where(
+        AIScan.transaction_id == transaction.id,
+    ).limit(1)) is not None:
+        raise HTTPException(409, "A confirmed receipt payment cannot be edited or deleted separately from its receipt")
 
 
 @router.post(
@@ -254,7 +266,7 @@ def update_transaction(
             user,
             transaction_id,
         )
-        editable(initial)
+        editable(db, initial)
 
         locked_ids = sorted(
             {initial.account_id, data.account_id}
@@ -276,7 +288,7 @@ def update_transaction(
             transaction_id,
             lock=True,
         )
-        editable(transaction)
+        editable(db, transaction)
 
         if transaction.account_id not in locked_ids:
             raise HTTPException(
@@ -287,15 +299,17 @@ def update_transaction(
         account = accounts[data.account_id]
         usable_account(account, user)
 
-        validate_expense_balance(
-            db,
-            account,
-            data,
-            exclude_transaction_id=transaction_id,
-        )
+        previous_balances = {
+            key: account_balance(db, value, lock_entries=True)
+            for key, value in accounts.items()
+        }
 
         for name, value in data.model_dump().items():
             setattr(transaction, name, value)
+
+        db.flush()
+        for key, value in accounts.items():
+            validate_balance_correction(db, value, previous_balances[key])
 
         db.commit()
         db.refresh(transaction)
@@ -319,11 +333,11 @@ def delete_transaction(
             user,
             transaction_id,
         )
-        editable(initial)
+        editable(db, initial)
 
         account_id = initial.account_id
 
-        owned_account(
+        account = owned_account(
             db,
             user,
             account_id,
@@ -336,7 +350,7 @@ def delete_transaction(
             transaction_id,
             lock=True,
         )
-        editable(transaction)
+        editable(db, transaction)
 
         if transaction.account_id != account_id:
             raise HTTPException(
@@ -345,7 +359,10 @@ def delete_transaction(
             )
 
         # Preserve references from existing transaction audit records.
+        previous_balance = account_balance(db, account, lock_entries=True)
         transaction.deleted_at = now_utc()
+        db.flush()
+        validate_balance_correction(db, account, previous_balance)
         db.commit()
 
         return {

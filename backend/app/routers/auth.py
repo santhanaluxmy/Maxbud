@@ -383,7 +383,7 @@ def google_login(
 
     full_name = str(
         payload.get("name") or "Google User"
-    ).strip()[:150]
+    ).strip()[:100]
 
     if len(full_name) < 2:
         full_name = "Google User"

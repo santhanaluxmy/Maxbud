@@ -14,7 +14,7 @@ router = APIRouter(prefix="/settings", tags=["Settings"])
 
 class ProfileIn(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
-    full_name: str = Field(min_length=2, max_length=150)
+    full_name: str = Field(min_length=2, max_length=100)
 
 
 @router.put("/profile", response_model=UserOut)

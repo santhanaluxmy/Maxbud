@@ -4,6 +4,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.core.deps import current_user, writable_user
 from app.core.plans import PLAN_LIMITS
@@ -121,6 +122,17 @@ class Contribution(BaseModel):
 
 @router.post("/{goal_id}/contribute")
 def contribute(goal_id: int, data: Contribution, user: User = Depends(writable_user), db: Session = Depends(get_db)):
+    try:
+        return record_contribution(db, user, goal_id, data)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, "Contribution conflicts with an existing submission; refresh and retry") from None
+    except Exception:
+        db.rollback()
+        raise
+
+
+def record_contribution(db, user, goal_id, data):
     initial = db.get(Goal, goal_id)
     if initial is not None and initial.family_id is not None:
         family, goal = shared_goal(db, user, goal_id)
@@ -151,10 +163,27 @@ def contribute(goal_id: int, data: Contribution, user: User = Depends(writable_u
         db.flush()
     else:
         goal = owned(db, user, goal_id)
+        # The user/goal locks serialize personal contributions. Keep historical
+        # saved_amount as the baseline; only new contributions enter the ledger.
+        if data.request_id:
+            previous = db.scalar(select(GoalContribution).where(
+                GoalContribution.user_id == user.id,
+                GoalContribution.request_id == data.request_id,
+            ).with_for_update())
+            if previous:
+                if previous.current_goal_id != goal.id or previous.amount != data.amount:
+                    raise HTTPException(409, "Contribution request_id was already used with different details")
+                return serialize(goal, db)
         if goal.status != "active":
             raise HTTPException(409, "Only active goals accept contributions")
         if goal.saved_amount + data.amount > goal.target_amount:
             raise HTTPException(422, "Contribution exceeds the remaining goal amount")
+        db.add(GoalContribution(
+            current_goal_id=goal.id,
+            user_id=user.id,
+            request_id=data.request_id,
+            amount=data.amount,
+        ))
         goal.saved_amount += data.amount
         if goal.saved_amount == goal.target_amount:
             goal.status = "completed"

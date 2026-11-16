@@ -27,8 +27,8 @@ class IncomeSource(Base):
         ForeignKey("users.id"),
         index=True,
     )
-    name: Mapped[str] = mapped_column(String(120))
-    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    name: Mapped[str] = mapped_column(String(100))
+    amount: Mapped[Decimal] = mapped_column(Numeric(14, 2))
     frequency: Mapped[str] = mapped_column(
         String(20),
         default="monthly",

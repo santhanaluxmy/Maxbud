@@ -64,9 +64,9 @@ export default function RegisterPage() {
       return;
     }
 
-    if (fullName.length > 150) {
+    if (fullName.length > 100) {
       setFeedback(
-        "Full name must not exceed 150 characters."
+        "Full name must not exceed 100 characters."
       );
       return;
     }
@@ -223,7 +223,7 @@ export default function RegisterPage() {
                     autoComplete="name"
                     value={values.name}
                     onChange={change}
-                    maxLength={150}
+                    maxLength={100}
                     disabled={loading}
                   />
                 </span>

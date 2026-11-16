@@ -99,6 +99,23 @@ def account_response(db: Session, account: Account) -> AccountOut:
     )
 
 
+def validate_balance_correction(
+    db: Session,
+    account: Account,
+    previous_balance: Decimal,
+) -> None:
+    """Call after flushing a correction, while holding the account row lock.
+
+    Existing negative balances may be corrected gradually, but an edit must
+    never create a negative balance or make an existing deficit larger.
+    """
+    if account_balance(db, account, lock_entries=True) < min(ZERO, previous_balance):
+        raise HTTPException(
+            422,
+            "This change would overdraw the account or increase its existing deficit",
+        )
+
+
 def transfer_response(
     db: Session,
     user: User,

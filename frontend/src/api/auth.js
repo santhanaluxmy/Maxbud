@@ -6,10 +6,7 @@ import {
   saveAuthSession,
 } from "../services/authApi.js";
 
-const API_URL = (
-  import.meta.env?.VITE_API_URL ||
-  "http://127.0.0.1:8000"
-).replace(/\/$/, "");
+import { apiUrl } from "./base.js";
 
 function getErrorMessage(result, status) {
   if (typeof result?.detail === "string") {
@@ -67,7 +64,7 @@ export async function getCurrentUser() {
   let response;
 
   try {
-    response = await fetch(`${API_URL}/auth/me`, {
+    response = await fetch(apiUrl("/auth/me"), {
       headers: {
         Authorization: `Bearer ${token}`,
       },

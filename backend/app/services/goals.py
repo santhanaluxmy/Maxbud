@@ -60,7 +60,7 @@ def shared_details(db, goal, lock=False):
 
 
 def allocated_shared(db, user_ids, family_id=None):
-    statement = select(func.coalesce(func.sum(GoalContribution.amount), 0)).join(Goal, Goal.id == GoalContribution.current_goal_id).where(GoalContribution.user_id.in_(user_ids), GoalContribution.reversed_at.is_(None))
+    statement = select(func.coalesce(func.sum(GoalContribution.amount), 0)).join(Goal, Goal.id == GoalContribution.current_goal_id).where(GoalContribution.user_id.in_(user_ids), GoalContribution.reversed_at.is_(None), Goal.family_id.is_not(None))
     if family_id is not None:
         statement = statement.where(Goal.family_id == family_id)
     return Decimal(db.scalar(statement) or 0)

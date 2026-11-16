@@ -14,7 +14,7 @@ const result = { access_token: 'test-token', user: { id: 1, full_name: 'Test Use
 
 test('registration sends validated JSON contract including password confirmation', async () => {
   globalThis.fetch = async (url, options) => {
-    assert.equal(url, 'http://127.0.0.1:8000/auth/register');
+    assert.equal(url, '/api/auth/register');
     assert.equal(options.method, 'POST');
     assert.deepEqual(JSON.parse(options.body), { full_name: 'Test User', email: 'test@example.com', password: 'ExamplePassword123!', confirm_password: 'ExamplePassword123!' });
     return Response.json(result, { status: 201 });
@@ -29,7 +29,7 @@ test('login uses backend JSON contract and profile uses bearer token', async () 
       assert.deepEqual(JSON.parse(options.body), { email: 'test@example.com', password: 'ExamplePassword123!' });
       return Response.json(result);
     }
-    assert.equal(url, 'http://127.0.0.1:8000/auth/me');
+    assert.equal(url, '/api/auth/me');
     assert.equal(options.headers.Authorization, 'Bearer test-token');
     return Response.json(result.user);
   };

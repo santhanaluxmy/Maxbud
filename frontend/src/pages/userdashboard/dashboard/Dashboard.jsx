@@ -1,4 +1,5 @@
 import CashFlowTable, { CashFlowSummary } from "./CashFlow";
+import AccountTransfer from "./AccountTransfer";
 
 import DashboardOverview from "./DashboardOverview";
 import Modal from "../../../components/common/Modal";
@@ -1004,6 +1005,7 @@ export default function Dashboard() {
         {tab === "accounts" && (
           <>
             <div className="db-section-actions">
+              <button className="db-outline-btn" disabled={loading || accounts.filter(account => !account.is_archived).length < 2} title="Transfer between two active tracked accounts" onClick={() => setModal("transfer")}>Transfer money</button>
               {actionButton("Add account", () => {
                 setAccountEditId(null);
                 setAccountForm({
@@ -1263,6 +1265,7 @@ export default function Dashboard() {
                           setContribution({
                             id: goal.id,
                             amount: "",
+                            request_id: crypto.randomUUID(),
                           });
                           setModal("contribute");
                         }}
@@ -1539,6 +1542,7 @@ export default function Dashboard() {
             <label>
               Account
               <select
+                aria-label="Account"
                 required
                 value={form.account_id}
                 onChange={(e) =>
@@ -1687,6 +1691,8 @@ export default function Dashboard() {
         </Modal>
       )}
 
+      {modal === "transfer" && <AccountTransfer accounts={accounts} onClose={() => setModal(null)} onSaved={async () => { setModal(null); await refresh(); }}/>}
+
       {/* ACCOUNT MODAL */}
 
       {modal === "account" && (
@@ -1721,6 +1727,7 @@ export default function Dashboard() {
             <label>
               Account type
               <select
+                aria-label="Account type"
                 value={accountForm.kind}
                 onChange={(e) =>
                   setAccountForm({
@@ -2010,6 +2017,7 @@ export default function Dashboard() {
                 e,
                 `/goals/${contribution.id}/contribute`,
                 {
+                  request_id: contribution.request_id,
                   amount: String(
                     contribution.amount
                   ),

@@ -1,12 +1,11 @@
 
-const API_URL =
-  import.meta.env?.VITE_API_URL || "http://127.0.0.1:8000";
+import { apiUrl } from "../api/base.js";
 
 async function request(path, data) {
   let response;
 
   try {
-    response = await fetch(`${API_URL}${path}`, {
+    response = await fetch(apiUrl(path), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

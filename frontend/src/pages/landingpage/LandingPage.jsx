@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import Navbar from "../../components/Navbar";
+import { apiUrl } from "../../api/base.js";
 
 import logo from "../../assets/images/maxbud-logo.png";
 import financeHero from "../../assets/images/maxbud hero.png";
@@ -365,7 +366,7 @@ export default function LandingPage() {
   const [pricingError, setPricingError] = useState("");
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${(import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "")}/subscriptions/plans`, { signal: controller.signal }).then(response => { if (!response.ok) throw new Error("Plan information is unavailable."); return response.json(); }).then(setPlanCatalog).catch(error => { if (!controller.signal.aborted) setPricingError(error.message); });
+    fetch(apiUrl("/subscriptions/plans"), { signal: controller.signal }).then(response => { if (!response.ok) throw new Error("Plan information is unavailable."); return response.json(); }).then(setPlanCatalog).catch(error => { if (!controller.signal.aborted) setPricingError(error.message); });
     return () => controller.abort();
   }, []);
 

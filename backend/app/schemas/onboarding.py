@@ -5,11 +5,11 @@ from pydantic import BaseModel, Field, field_validator
 
 Money = Decimal
 class AboutYouIn(BaseModel):
-    full_name: str = Field(min_length=2, max_length=150)
+    full_name: str = Field(min_length=2, max_length=100)
     currency: str = Field(default="LKR", pattern=r"^[A-Z]{3}$")
 
 class IncomeItem(BaseModel):
-    name: str = Field(min_length=1, max_length=120)
+    name: str = Field(min_length=1, max_length=100)
     amount: Money = Field(gt=0, max_digits=12, decimal_places=2)
     frequency: Literal["weekly", "monthly", "yearly"] = "monthly"
 

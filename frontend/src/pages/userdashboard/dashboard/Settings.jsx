@@ -30,7 +30,7 @@ export default function Settings() {
     }}>Export my records</button>
     {message && <p role="status">{message}</p>}{error && <p className="db-error" role="alert">{error}</p>}
     <div className="db-settings-grid"><GlassCard><form className="db-modal-form" onSubmit={e => save(e, "/settings/profile", { full_name: name })}>
-      <label>Full name<input required minLength={2} maxLength={150} value={name} onChange={e => setName(e.target.value)}/></label>
+      <label>Full name<input required minLength={2} maxLength={100} value={name} onChange={e => setName(e.target.value)}/></label>
       <p>{getAuthSession()?.user?.email}</p><button disabled={busy} className="db-primary-btn">Save profile</button>
     </form></GlassCard>
     <GlassCard><form className="db-modal-form" onSubmit={e => save(e, "/settings/password", passwords)}>

@@ -1,13 +1,13 @@
-import { getAuthSession } from "../services/authApi";
+import { getAuthSession } from "../services/authApi.js";
 
-const BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+import { apiUrl } from "./base.js";
 
 export async function api(path, { method = "GET", data, signal, requestId } = {}) {
   const token = getAuthSession()?.token;
   if (!token) throw new Error("Please sign in to continue.");
   let response;
   try {
-    response = await fetch(`${BASE_URL}${path}`, {
+    response = await fetch(apiUrl(path), {
       method,
       signal,
       headers: {
