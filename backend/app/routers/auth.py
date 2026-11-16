@@ -19,7 +19,7 @@ from app.core.security import (
 )
 from app.database import get_db
 from app.models.user import AuthIdentity, User
-from app.services.family import create_owner_family
+from app.services.subscriptions import start_trial
 from app.schemas.auth import (
     AuthOut,
     GoogleIn,
@@ -178,7 +178,7 @@ def register(
             email,
             encrypted,
         )
-        create_owner_family(db, user)
+        start_trial(db, user)
 
         db.add(
             AuthIdentity(
@@ -395,7 +395,7 @@ def google_login(
             email,
             password_hash=None,
         )
-        create_owner_family(db, user)
+        start_trial(db, user)
 
         db.add(
             AuthIdentity(

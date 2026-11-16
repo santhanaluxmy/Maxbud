@@ -41,6 +41,7 @@ class UserOut(BaseModel):
     full_name: str
     email: str
     role: str
+    is_active: bool
     currency: str
     onboarding_completed: bool
 

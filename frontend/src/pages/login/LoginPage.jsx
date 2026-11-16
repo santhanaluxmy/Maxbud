@@ -41,7 +41,7 @@ export default function LoginPage() {
     saveAuthSession(result, remember);
 
     navigate(
-      result.onboarding_completed
+      result.user?.role === "admin" ? "/dashboard/admin" : result.onboarding_completed
         ? "/dashboard"
         : "/onboarding",
       { replace: true }
@@ -139,7 +139,7 @@ export default function LoginPage() {
         <div className="auth-panel">
           <div className="auth-card">
 
-            <Link to="/">
+            <Link to="/" className="auth-brand" aria-label="MaxBud home">
               <img
                 src={logo}
                 className="auth-logo"

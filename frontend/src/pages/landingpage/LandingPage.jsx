@@ -1,5 +1,5 @@
 import "./LandingPage.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import {
@@ -26,31 +26,6 @@ import savingsHero from "../../assets/images/maxbud2.png";
 // ====================================
 // FREE PLAN FEATURES
 // ====================================
-
-const freeBenefits = [
-  "Register, Login & Personal Dashboard",
-  "Manual Income & Expense Tracking",
-  "Accounts Management",
-  "Monthly Budgets & Basic Reports",
-  "Basic Savings Goals",
-  "Bill & Loan Reminders",
-  "Limited AI Receipt Scanning (Planned)",
-  "Basic AI Advice, Insights & Merchant Memory (Planned)",
-];
-
-// ====================================
-// PREMIUM PLAN FEATURES
-// ====================================
-
-const premiumBenefits = [
-  "Everything included in Free",
-  "Expanded AI Receipt Scanning (Planned)",
-  "Full Advanced Spending Insights (Planned)",
-  "Full AI Money Advisor (Planned)",
-  "AI Goal Planner & Spending Predictions (Planned)",
-  "Household Management (Planned)",
-  "Advanced Merchant Memory (Planned)",
-];
 
 // ====================================
 // PRICING FEATURE COMPONENT
@@ -327,7 +302,7 @@ function FeatureCard({ feature, index }) {
         <p>{feature.description}</p>
       </div>
 
-      <FeatureVisual index={index} />
+      <div className="feature-art-frame"><FeatureVisual index={index} /></div>
     </article>
   );
 }
@@ -386,6 +361,14 @@ const questions = [
 // ====================================
 
 export default function LandingPage() {
+  const [planCatalog, setPlanCatalog] = useState(null);
+  const [pricingError, setPricingError] = useState("");
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${(import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "")}/subscriptions/plans`, { signal: controller.signal }).then(response => { if (!response.ok) throw new Error("Plan information is unavailable."); return response.json(); }).then(setPlanCatalog).catch(error => { if (!controller.signal.aborted) setPricingError(error.message); });
+    return () => controller.abort();
+  }, []);
+
   const [openFaq, setOpenFaq] = useState(0);
 
   return (
@@ -563,99 +546,16 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="pricing-grid">
-            {/* FREE PLAN */}
-
-            <article className="plan-card glass-plan free-plan">
-              <div className="plan-top">
-                <div className="plan-symbol">
-                  <Wallet size={23} />
-                </div>
-
-                <span className="plan-chip">
-                  Personal Budgeting
-                </span>
-              </div>
-
-              <h3>Free</h3>
-
-              <div className="plan-price">
-                LKR 0
-                <small> / month</small>
-              </div>
-
-              <p>
-                Everything you need to manage your
-                everyday finances.
-              </p>
-
-              <ul className="plan-benefit-list">
-                {freeBenefits.map((benefit) => (
-                  <PlanFeature key={benefit}>
-                    {benefit}
-                  </PlanFeature>
-                ))}
-              </ul>
-
-              <Link
-                to="/register"
-                className="max-btn aqua plan-action"
-              >
-                Get Started Free
-                <ArrowRight size={17} />
-              </Link>
-            </article>
-
-            {/* PREMIUM PLAN */}
-
-            <article className="plan-card glass-plan premium-plan">
-              <div className="plan-top">
-                <div className="plan-symbol">
-                  <Sparkles size={23} />
-                </div>
-
-                <span className="plan-chip premium-chip">
-                  Coming Soon
-                </span>
-              </div>
-
-              <h3>Premium</h3>
-
-              <div className="plan-price">
-                Price to Be Announced
-              </div>
-
-              <p>
-                Unlock advanced financial insights,
-                AI planning and family budgeting.
-              </p>
-
-              <ul className="plan-benefit-list">
-                {premiumBenefits.map((benefit) => (
-                  <PlanFeature key={benefit}>
-                    {benefit}
-                  </PlanFeature>
-                ))}
-              </ul>
-
-              <Link
-                to="/register"
-                className="max-btn pink plan-action"
-              >
-                Explore MaxBud
-                <ArrowRight size={17} />
-              </Link>
-            </article>
-          </div>
-
-          <p className="plans-disclaimer">
-            This represents MaxBud's planned
-            features. AI services, household
-            management and Premium subscriptions
-            may not yet be available in this build.
-            Premium pricing has not been finalized.
-            No payment is collected here.
-          </p>
+          {pricingError && <p role="alert">{pricingError} You can still explore MaxBud and register for a trial.</p>}
+          {!planCatalog && !pricingError && <p role="status">Loading configured plans…</p>}
+          <div className="pricing-grid">{planCatalog?.plans.map(plan => <article className={`plan-card glass-plan ${plan.id === "trial" ? "free-plan" : "premium-plan"}`} key={plan.id}>
+            <div className="plan-top"><div className="plan-symbol">{plan.id === "family_pack" ? <Users size={23}/> : plan.id === "trial" ? <Wallet size={23}/> : <Sparkles size={23}/>}</div><span className="plan-chip">{plan.id === "family_pack" ? "Shared household tools" : "Personal budgeting"}</span></div>
+            <h3>{plan.name}</h3><div className="plan-price">{plan.id === "trial" ? "LKR 0" : plan.prices.monthly === null ? "Configurable pricing" : `LKR ${Number(plan.prices.monthly).toLocaleString("en-LK")}`}<small>{plan.id === "trial" ? " / 3 calendar months" : " / month"}</small></div>
+            {plan.id !== "trial" && <p>Yearly: {plan.prices.yearly === null ? "Price not configured" : `LKR ${Number(plan.prices.yearly).toLocaleString("en-LK")}`}</p>}
+            <ul className="plan-benefit-list"><PlanFeature>Accounts, income, expenses and budgets</PlanFeature><PlanFeature>Savings goals, reminders and personal reports</PlanFeature><PlanFeature>{plan.limits.receipt_scans} receipt scans per month</PlanFeature><PlanFeature>{plan.limits.advisor_messages} advisor messages per month</PlanFeature>{plan.id === "family_pack" ? <><PlanFeature>{plan.limits.family_members} total household users</PlanFeature><PlanFeature>Shared wallets, goals, budgets and expense splits</PlanFeature><PlanFeature>Individual AI allowances for sponsored members</PlanFeature></> : <PlanFeature>For one person; household management not included</PlanFeature>}</ul>
+            <Link to="/register" className={`max-btn ${plan.id === "trial" ? "aqua" : "pink"} plan-action`} onClick={() => { if (plan.id !== "trial") sessionStorage.setItem("maxbud_plan_interest", plan.id); }}>{plan.id === "trial" ? "Start Free Trial" : "Explore demo plans"}<ArrowRight size={17}/></Link>
+          </article>)}</div>
+          <p className="plans-disclaimer">Demo Payment — No real money will be charged. Prices are configurable, not final production prices. New registrations receive a three-calendar-month personal trial. After expiry, history and export remain available; new financial editing requires eligible access.</p>
         </section>
 
         {/* =================================

@@ -20,6 +20,7 @@ def owned_account(
 ) -> Account:
     statement = select(Account).where(
         Account.id == account_id,
+        Account.family_id.is_(None),
         Account.user_id == user.id,
     )
 
@@ -60,7 +61,7 @@ def account_balance(
         Transaction.kind,
         Transaction.amount,
     ).where(
-        Transaction.user_id == account.user_id,
+        (Transaction.family_id == account.family_id) if account.family_id is not None else (Transaction.user_id == account.user_id),
         Transaction.account_id == account.id,
         Transaction.deleted_at.is_(None),
     )

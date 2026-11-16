@@ -2,7 +2,7 @@ import { getAuthSession } from "../services/authApi";
 
 const BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 
-export async function api(path, { method = "GET", data, signal } = {}) {
+export async function api(path, { method = "GET", data, signal, requestId } = {}) {
   const token = getAuthSession()?.token;
   if (!token) throw new Error("Please sign in to continue.");
   let response;
@@ -11,6 +11,7 @@ export async function api(path, { method = "GET", data, signal } = {}) {
       method,
       signal,
       headers: {
+        ...(requestId ? { "Idempotency-Key": requestId } : {}),
         Authorization: `Bearer ${token}`,
         ...(data !== undefined ? { "Content-Type": "application/json" } : {}),
       },
@@ -22,6 +23,7 @@ export async function api(path, { method = "GET", data, signal } = {}) {
   }
   const result = await response.json().catch(() => null);
   if (!response.ok) {
+    if (response.status === 401) { logout(); window.location.assign("/login"); }
     const detail = result?.detail;
     const message = Array.isArray(detail)
       ? detail.map((item) => item?.msg || "Invalid input").join("; ")

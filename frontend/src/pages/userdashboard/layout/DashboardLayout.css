@@ -656,3 +656,6 @@
     scroll-behavior: auto !important;
   }
 }
+
+.db-bell { position: relative; }
+.db-notification-count { position: absolute; top: -3px; right: -3px; min-width: 17px; padding: 1px 4px; border-radius: 10px; background: #F7ADAD; color: #344e50; font-size: 10px; }

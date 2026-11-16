@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowDownToLine, ArrowUpFromLine, ArrowRight, BarChart3, Bus, Coins,
   Ellipsis, GraduationCap, HeartPulse, House, Info, List, PieChart as PieIcon,
-  RefreshCw, ShoppingBag, Target, Utensils, Wallet,
+  RefreshCw, ShoppingBag, Target, Utensils, Wallet, Users,
 } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer,
@@ -46,14 +46,14 @@ function Metric({ title, value, icon: Icon, tone, note, children, help }) {
     <div className="ov-metric-body"><span className="ov-metric-label">{title}{help && <span className="ov-help" tabIndex={0} aria-label={help} title={help}><Info size={14}/></span>}</span><strong>{value}</strong><small>{note}</small>{children}</div>
   </section>;
 }
-function CashFlow({ rows, currency, loading, available }) {
+function CashFlow({ rows, currency, loading, available, shared = false }) {
   const data = rows.slice(-6).map((row) => ({
     month: row.month,
     label: /^\d{4}-\d{2}$/.test(row.month) ? new Date(`${row.month}-15T12:00:00`).toLocaleDateString("en-GB", { month: "short" }) : row.month,
     income: number(row.income), expenses: number(row.expenses),
   }));
   const hasActivity = data.some((row) => row.income > 0 || row.expenses > 0);
-  return <Panel icon={BarChart3} title="Income vs Expenses" subtitle="Your cash flow over the last 6 months." action={<span className="ov-range">Last 6 Months</span>}>
+  return <Panel icon={BarChart3} title={shared ? "Shared Funding vs Spending" : "Income vs Expenses"} subtitle="Your cash flow over the last 6 months." action={<span className="ov-range">Last 6 Months</span>}>
     {loading ? <Loading>Loading your cash flow…</Loading> : !available ? <EmptyState icon={BarChart3} title="Cash flow unavailable" text="Retry loading your dashboard to see your chart."/> : !hasActivity ? <EmptyState icon={BarChart3} title="Your cash flow starts here" text="Record income and expenses to see your six-month overview."/> : <>
       <div className="ov-legend"><span><i style={{ background: palette[0] }}/>Income</span><span><i style={{ background: palette[1] }}/>Expenses</span></div>
       <div className="ov-bar-chart" role="img" aria-label={`Monthly income versus expenses in ${currency}. ${data.map((r) => `${r.label}: income ${formatAmount(r.income)}, expenses ${formatAmount(r.expenses)}`).join("; ")}`}>
@@ -63,8 +63,8 @@ function CashFlow({ rows, currency, loading, available }) {
             <XAxis dataKey="label" axisLine={{ stroke: "#d2d8ce" }} tickLine={false} tick={{ fill: "#244d50", fontSize: 11 }} dy={5}/>
             <YAxis width={67} axisLine={false} tickLine={false} tick={{ fill: "#426264", fontSize: 10 }} tickFormatter={(value) => `${currency} ${Math.abs(value) >= 1000 ? `${+(value / 1000).toFixed(1)}K` : value}`}/>
             <Tooltip cursor={{ fill: "rgba(177,229,230,.16)" }} formatter={(value, name) => [formatMoney(value, currency), name]} contentStyle={{ borderRadius: 12, border: "1px solid #b1e5e6", background: "#fcfaf3", fontSize: 12 }}/>
-            <Bar dataKey="income" name="Income" fill={palette[0]} radius={[4, 4, 0, 0]} maxBarSize={34}/>
-            <Bar dataKey="expenses" name="Expenses" fill={palette[1]} radius={[4, 4, 0, 0]} maxBarSize={34}/>
+            <Bar dataKey="income" name={shared ? "Wallet funding (transfers)" : "Income"} fill={palette[0]} radius={[4, 4, 0, 0]} maxBarSize={34}/>
+            <Bar dataKey="expenses" name={shared ? "Shared spending" : "Expenses"} fill={palette[1]} radius={[4, 4, 0, 0]} maxBarSize={34}/>
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -112,8 +112,11 @@ function GoalProgress({ goals, currency, loading, available }) {
 }
 
 export default function DashboardOverview({ person }) {
+  const [billState, setBillState] = useState({ rows: [], loading: true, error: "" });
   const [data, setData] = useState(null);
-  const [scope, setScope] = useState("me");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const scope = searchParams.get("scope") === "family" ? "family" : "me";
+  const setScope = value => setSearchParams(previous => { const next = new URLSearchParams(previous); next.set("scope", value); return next; }, { replace: true });
   const [canViewFamily, setCanViewFamily] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -138,6 +141,13 @@ export default function DashboardOverview({ person }) {
     return () => controller.abort();
   }, [revision, scope]);
 
+  useEffect(() => {
+    if (scope !== "me") return;
+    const controller = new AbortController();
+    api("/reminders", { signal: controller.signal }).then(rows => { if (!controller.signal.aborted) setBillState({ rows, loading: false, error: "" }); }).catch(error => { if (!controller.signal.aborted) setBillState({ rows: [], loading: false, error: error.message }); });
+    return () => controller.abort();
+  }, [scope, revision]);
+
   const firstName = person?.full_name?.trim().split(" ")[0] || "there";
   const currency = data?.currency || person?.currency || "LKR";
   const rows = (key) => Array.isArray(data?.[key]) ? data[key] : [];
@@ -149,20 +159,44 @@ export default function DashboardOverview({ person }) {
   return <main className="ov-main" aria-busy={loading}>
     <section className="ov-welcome"><div><span className="ov-eyebrow">YOUR FINANCIAL OVERVIEW</span><h1>Welcome back, {firstName} <span className="ov-wave" role="img" aria-label="hello">👋</span></h1><p>Track, plan and grow your money with MaxBud.</p></div><img className="ov-piggy" src={piggyBank} alt="Piggy bank with coins and a growing savings chart"/><button className="ov-refresh" type="button" onClick={() => setRevision((value) => value + 1)} disabled={loading} aria-label="Refresh dashboard" title="Refresh dashboard"><RefreshCw size={17}/></button></section>
     {canViewFamily && <label className="ov-goal-select">Dashboard scope<select aria-label="Dashboard scope" value={scope} onChange={(event) => { setData(null); setLoading(true); setScope(event.target.value); }}><option value="me">My Finances</option><option value="family">Family Finances</option></select></label>}
-    {scope === "family" && <p role="status">Family totals include active members. Individual transaction and goal details stay in personal dashboards.</p>}
+    {scope === "family" && <p role="status">Only explicitly shared household records are shown. Private salaries, accounts and transactions remain private.</p>}
     {error && <div className="ov-notice ov-notice-error" role="alert"><Info size={19}/><div><strong>{error.status === 401 ? "Your session has expired." : "We couldn't load your dashboard."}</strong><p>{error.message}</p></div>{error.status === 401 ? <Link to="/login">Sign in again <ArrowRight size={16}/></Link> : <button type="button" onClick={() => setRevision((value) => value + 1)}>Retry</button>}</div>}
     {accountError && !error && <div className="ov-notice" role="status"><Info size={18}/><span>{accountError} Account IDs are shown in the meantime.</span>{accountError.includes("expired") && <Link to="/login">Sign in again</Link>}</div>}
     <div className="ov-metrics">
-      <Metric title="Total Balance" value={value("total_balance")} icon={Wallet} tone="aqua" note={loading ? "Loading your balance…" : "Across your tracked accounts"}/>
-      <Metric title="Income (This Month)" value={value("monthly_income")} icon={ArrowDownToLine} tone="cream" note={loading ? "Loading recorded income…" : "Actual recorded income"}/>
-      <Metric title="Expenses (This Month)" value={value("monthly_expenses")} icon={ArrowUpFromLine} tone="pink" note={loading ? "Loading recorded expenses…" : "Actual recorded expenses"}/>
       <Metric title="Safe to Spend" value={value("safe_to_spend_estimate")} icon={Coins} tone="mint" help={data?.safe_to_spend_note || "An estimate after reserving remaining budgets. Upcoming bills and loans are excluded."} note={safePercent !== null && available ? `${Math.round(safePercent)}% of tracked balance` : "Estimated after budget reserves"}>
         {safePercent !== null && available && <div className="ov-safe-progress" role="progressbar" aria-label="Safe to spend as a share of tracked balance" aria-valuenow={Math.round(safePercent)} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${safePercent}%` }}/></div>}
       </Metric>
+
+      <Metric title={scope === "family" ? "Wallet Funding (Transfers)" : "Income (This Month)"} value={value(scope === "family" ? "monthly_wallet_funding" : "monthly_income")} icon={ArrowDownToLine} tone="cream" note={loading ? "Loading recorded income…" : "Actual recorded income"}/>
+      <Metric title={scope === "family" ? "Shared Spending (This Month)" : "Expenses (This Month)"} value={value("monthly_expenses")} icon={ArrowUpFromLine} tone="pink" note={loading ? "Loading recorded expenses…" : "Actual recorded expenses"}/>
+      <Metric title={scope === "family" ? "Shared Wallet Balance" : "Total Balance"} value={value("total_balance")} icon={Wallet} tone="aqua" note={loading ? "Loading your balance…" : "Across your tracked accounts"}/>
+
     </div>
-    <div className="ov-grid ov-chart-grid"><CashFlow rows={rows("six_month_trend")} currency={currency} loading={loading} available={available}/><Spending rows={rows("spending_by_category")} currency={currency} loading={loading} available={available}/></div>
+    {scope === "me" && <div className="ov-grid ov-commitments">
+      <Panel icon={PieIcon} title="Budget Progress" subtitle="Keep your monthly plan in view." action={<Link className="ov-link" to="/dashboard/budgets">View budgets <ArrowRight size={15}/></Link>}>
+        {loading ? <Loading>Loading budgets…</Loading> : !available ? <p>Budget progress is unavailable.</p> : !rows("budgets").length ? <EmptyState icon={PieIcon} title="Give your spending a plan" text="Create a category budget to follow your progress here."/> : <div className="ov-budget-list">{rows("budgets").slice(0,4).map(budget => <div key={budget.category}><div><strong>{titleCase(budget.category)}</strong><span>{formatMoney(budget.spent,currency)} <small>of {formatMoney(budget.limit,currency)}</small></span></div><progress aria-label={`${budget.category} budget used`} value={Math.max(0,number(budget.used_percent) || 0)} max={100} className={budget.used_percent >= 80 ? "ov-budget-warning" : ""}/></div>)}</div>}
+      </Panel>
+      <Panel icon={House} title="Upcoming Bills" subtitle="Your next payments, including anything overdue." action={<Link className="ov-link" to="/dashboard/reminders">View bills <ArrowRight size={15}/></Link>}>
+        {billState.loading ? <Loading>Loading payments…</Loading> : billState.error ? <p role="status">{billState.error}</p> : !billState.rows.length ? <EmptyState icon={House} title="Nothing due right now" text="Add a reminder to keep upcoming payments in sight."/> : <ul className="ov-bill-list">{billState.rows.slice(0,4).map(bill => <li key={bill.id}><span className="db-icon-pill"><House size={16}/></span><div><strong>{bill.name}</strong><small>{formatDate(bill.due_date)}</small></div><strong>{formatMoney(bill.amount,currency)}</strong></li>)}</ul>}
+      </Panel>
+    </div>}
+    <div className="ov-grid ov-chart-grid"><CashFlow shared={scope === "family"} rows={scope === "family" ? rows("six_month_trend").map(row => ({ ...row, income: row.wallet_funding || "0.00" })) : rows("six_month_trend")} currency={currency} loading={loading} available={available}/><Spending rows={rows("spending_by_category")} currency={currency} loading={loading} available={available}/></div>
     {scope === "me" ? <div className="ov-grid ov-bottom-grid"><RecentTransactions rows={rows("recent_transactions")} accounts={accounts} currency={currency} loading={loading} available={available}/><GoalProgress goals={rows("goals")} currency={currency} loading={loading} available={available}/></div> : <Panel icon={PieIcon} title="Family budget overview" subtitle="Combined monthly budgets across active family members.">
       {loading ? <Loading>Loading family budgets…</Loading> : !available ? <p>Family budgets unavailable.</p> : !rows("budgets").length ? <p>No family budgets yet.</p> : <div className="ov-table-scroll"><table className="ov-table"><thead><tr><th>Category</th><th>Budget</th><th>Spent</th><th>Remaining</th></tr></thead><tbody>{rows("budgets").map((budget) => <tr key={budget.category}><td>{titleCase(budget.category)}</td><td>{formatMoney(budget.limit, currency)}</td><td>{formatMoney(budget.spent, currency)}</td><td>{formatMoney(budget.remaining, currency)}</td></tr>)}</tbody></table></div>}
     </Panel>}
+    {scope === "family" && <>
+      <Panel icon={Users} title="Household contribution summary" subtitle="Wallet funding is a transfer, not income. Private salaries are not included.">
+        {!available ? <p>{loading ? "Loading shared report…" : "Shared report unavailable."}</p> : <><p className="db-note">{data.family_population}</p><p>Wallet net cash flow this month: {formatMoney(data.monthly_net_cash_flow,currency)}. Personal payments and reimbursements are tracked separately.</p><div className="ov-table-scroll"><table className="ov-table"><thead><tr><th>Member</th><th>Wallet funding (month)</th><th>Shared expenses paid (month)</th><th>Goal allocations (all time)</th></tr></thead><tbody>{rows("member_summaries").map(member => <tr key={member.user_id}><td><span className={`family-member-dot tone-${member.user_id % 3}`}/>{member.full_name}</td><td>{formatMoney(member.wallet_funding,currency)}</td><td>{formatMoney(member.expenses,currency)}</td><td>{formatMoney(member.shared_goal_contributions,currency)}</td></tr>)}</tbody><tfoot><tr><th>Household</th><td>{formatMoney(data.monthly_wallet_funding,currency)}</td><td>{formatMoney(data.monthly_expenses,currency)}</td><td>{formatMoney(data.total_savings_allocated,currency)}</td></tr></tfoot></table></div></>}
+      </Panel>
+      <div className="ov-grid family-report-grid">
+        <Panel icon={Target} title="Shared savings" subtitle="Contribution history is retained when membership changes." action={<Link className="ov-link" to="/dashboard/family">Manage goals <ArrowRight size={15}/></Link>}>
+          {!rows("shared_goals").length ? <p>No shared savings goals yet.</p> : <ul className="ov-bill-list">{rows("shared_goals").map(goal => <li key={goal.id}><div><strong>{goal.name}</strong><small>{goal.status} · {Math.round(goal.progress)}% complete</small></div><strong>{formatMoney(goal.saved_amount,currency)}</strong></li>)}</ul>}
+        </Panel>
+        <Panel icon={House} title="Household bills" subtitle="Combined payments by category and due date; personal bill details remain private.">
+          {!rows("upcoming_bills").length ? <p>No upcoming household bills recorded.</p> : <ul className="ov-bill-list">{rows("upcoming_bills").map(bill => <li key={`${bill.category}-${bill.due_date}`}><div><strong>{titleCase(bill.category)}</strong><small>{formatDate(bill.due_date)} · {bill.bill_count} payment{bill.bill_count === 1 ? "" : "s"}</small></div><strong>{formatMoney(bill.amount,currency)}</strong></li>)}</ul>}
+        </Panel>
+      </div>
+      <Panel icon={Users} title="Outstanding reimbursements" subtitle="These balances are debts between members, not new expenses.">{!rows("reimbursements").length ? <p>No reimbursements recorded.</p> : <ul className="ov-bill-list">{rows("reimbursements").map(debt => <li key={debt.share_id}><div><strong>{debt.debtor} owes {debt.creditor}</strong><small>Expense #{debt.expense_id}</small></div><strong>{formatMoney(debt.remaining,currency)}</strong></li>)}</ul>}</Panel>
+    </>}
   </main>;
 }

@@ -22,6 +22,10 @@ MYSQL = os.environ.get("FAMILY_TEST_MYSQL") == "1"
 
 class FamilyTests(unittest.TestCase):
     def setUp(self):
+        from unittest.mock import patch
+        limits = patch.object(get_settings(), "RATE_LIMIT_ENABLED", False)
+        limits.start()
+        self.addCleanup(limits.stop)
         self.email_suffix = uuid.uuid4().hex[:12] if MYSQL else ""
         if MYSQL:
             self.connection = mysql_engine.connect()
@@ -60,7 +64,19 @@ class FamilyTests(unittest.TestCase):
     def register(self, name):
         response = self.client.post("/auth/register", json=self.payload(name))
         self.assertEqual(response.status_code, 201, response.text)
-        return response.json()
+        result = response.json()
+        # Explicit legacy fixture: production registration now starts a trial and
+        # does not create a household. Preserve legacy behavior tests deliberately.
+        user = self.db.get(User, result['user']['id'])
+        subscription = self.db.scalar(select(Subscription).where(Subscription.user_id == user.id))
+        subscription.plan = 'free'; subscription.status = 'active'; subscription.source = None
+        subscription.trial_started_at = None; subscription.trial_ends_at = None; subscription.expires_at = None
+        family = Family(owner_user_id=user.id, name=f"{user.full_name}'s Family")
+        self.db.add(family); self.db.flush()
+        self.db.add(FamilyMembership(family_id=family.id,user_id=user.id,status='active'))
+        user.role = 'owner'; self.db.commit()
+        result['user']['role'] = 'owner'
+        return result
 
     def headers(self, person):
         return {"Authorization": f"Bearer {person['access_token']}"}
@@ -172,11 +188,12 @@ class FamilyTests(unittest.TestCase):
             self.db.add(Transaction(user_id=self.owner["user"]["id"], account_id=aid, kind=kind, category="food", amount=10, txn_date=date.today(), transfer_id=transfer.id))
         self.db.commit()
         family = self.get("/dashboard?scope=family").json()
-        self.assertEqual((family["monthly_income"], family["monthly_expenses"], family["total_balance"]), ("700.00", "50.00", "850.00"))
-        self.assertEqual((family["budgets"][0]["limit"], family["budgets"][0]["spent"], family["remaining_budget"]), ("200.00", "50.00", "150.00"))
+        self.assertEqual((family["monthly_income"], family["monthly_expenses"], family["total_balance"]), ("0.00", "0.00", "0.00"))
+        self.assertEqual(family["budgets"], [])
+        self.assertTrue(family["shared_only"])
         self.assertEqual(family["recent_transactions"], [])
         self.assertEqual(family["goals"], [])
-        self.assertEqual(family["six_month_trend"][-1]["income"], "700.00")
+        self.assertEqual(family["six_month_trend"][-1]["income"], "0.00")
         self.assertEqual(self.get("/dashboard?scope=me", member).json()["monthly_income"], "200.00")
         self.assertEqual(self.get("/dashboard").json()["monthly_income"], "500.00")
         self.assertEqual(self.get("/dashboard?scope=bad").status_code, 422)
@@ -191,7 +208,7 @@ class FamilyTests(unittest.TestCase):
         self.db.expire_all()
         self.assertEqual(self.get("/family", member).status_code, 404)
         self.assertEqual(self.get("/family/members", member).status_code, 404)
-        self.assertEqual(self.get("/dashboard?scope=family", member).status_code, 403)
+        self.assertEqual(self.get("/dashboard?scope=family", member).status_code, 404)
         self.assertEqual(self.get("/dashboard?scope=me", member).json()["monthly_income"], "200.00")
         self.assertIsNotNone(self.db.get(Account, account_id))
         self.assertEqual(len(self.db.scalars(select(Transaction).where(Transaction.user_id == uid)).all()), 2)

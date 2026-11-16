@@ -6,6 +6,7 @@ from sqlalchemy import text
 
 from app.core.config import get_settings
 from app.database import engine
+from app.core.rate_limit import RequestLimits
 from app.routers import (
     account,
     auth,
@@ -14,7 +15,7 @@ from app.routers import (
     transaction,
 )
 from app.routers import budgets
-from app.routers import family
+from app.routers import family, goals, reminders, settings as account_settings, admin, ai, notifications, subscriptions, household
 
 
 settings = get_settings()
@@ -35,18 +36,15 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="MaxBud API",
     version="1.0",
+    docs_url=None if settings.ENVIRONMENT in {"beta", "production"} else "/docs",
+    redoc_url=None if settings.ENVIRONMENT in {"beta", "production"} else "/redoc",
     lifespan=lifespan,
 )
 
+app.add_middleware(RequestLimits)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=list(
-        {
-            settings.FRONTEND_ORIGIN,
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-        }
-    ),
+    allow_origins=[settings.FRONTEND_ORIGIN] if settings.ENVIRONMENT in {"beta", "production"} else list({settings.FRONTEND_ORIGIN, "http://localhost:5173", "http://127.0.0.1:5173"}),
     allow_credentials=False,
     allow_methods=[
         "GET",
@@ -59,6 +57,7 @@ app.add_middleware(
     allow_headers=[
         "Authorization",
         "Content-Type",
+        "Idempotency-Key",
     ],
 )
 
@@ -69,6 +68,14 @@ app.include_router(transaction.router)
 app.include_router(dashboard.router)
 app.include_router(budgets.router)
 app.include_router(family.router)
+app.include_router(goals.router)
+app.include_router(reminders.router)
+app.include_router(account_settings.router)
+app.include_router(admin.router)
+app.include_router(ai.router)
+app.include_router(notifications.router)
+app.include_router(subscriptions.router)
+app.include_router(household.router)
 
 
 @app.get("/health", tags=["Health"])

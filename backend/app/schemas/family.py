@@ -17,12 +17,18 @@ class MemberOut(BaseModel):
     role: Literal["owner", "member"]
     is_active: bool
     joined_at: datetime | None = None
+    can_view_shared: bool = False
+    can_add_shared: bool = False
 
 
 class FamilyOut(BaseModel):
+    can_view_shared: bool = False
+    can_add_shared: bool = False
+    can_edit_shared: bool = False
+    legacy_member_creation: bool = False
     id: int
     name: str
-    plan: Literal["free", "premium"]
+    plan: Literal["free", "premium", "family_pack", "read_only"]
     currency: str
     owner_name: str
     owner_id: int
@@ -30,3 +36,4 @@ class FamilyOut(BaseModel):
     total_active_members: int
     max_members: int
     available_slots: int
+    reserved_slots: int = 0

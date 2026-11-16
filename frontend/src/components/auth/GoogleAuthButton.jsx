@@ -4,7 +4,7 @@ export default function GoogleAuthButton({ onSuccess }) {
   const buttonRef = useRef(null);
   const onSuccessRef = useRef(onSuccess);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(() => !import.meta.env.VITE_GOOGLE_CLIENT_ID || !import.meta.env.VITE_BACKEND_URL ? "Google sign-in is not configured" : "");
+  const [error, setError] = useState(() => !import.meta.env.VITE_GOOGLE_CLIENT_ID ? "Google sign-in is not configured" : "");
 
   useEffect(() => {
     onSuccessRef.current = onSuccess;
@@ -16,7 +16,7 @@ export default function GoogleAuthButton({ onSuccess }) {
     const startedAt = Date.now();
 
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    const backendUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 
     if (!clientId || !backendUrl) {
       return;

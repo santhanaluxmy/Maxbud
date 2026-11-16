@@ -174,3 +174,43 @@
   .ov-goal-values > div + div { padding-left: 16px; }
   .ov-notice { flex-wrap: wrap; }
 }
+
+/* A clear first read: safe-to-spend, then income, expenses and tracked balance. */
+.db-app .ov-metrics { grid-template-columns: 1.3fr repeat(3,minmax(0,1fr)); gap: 16px; }
+.db-app .ov-metric { background: rgba(255,253,247,.74); border-radius: 16px; min-height: 122px; padding: 18px; box-shadow: 0 4px 18px rgba(36,73,75,.055); }
+.db-app .ov-metric.ov-mint { background: #B1E5E6; border-color: #95cdce; }
+.db-app .ov-mint .ov-metric-body > strong { font-size: clamp(23px,2vw,31px); }
+.db-app .ov-metric.ov-pink { background: rgba(247,173,173,.35); }
+.db-app .ov-metric-icon { width: 36px; height: 36px; border-radius: 11px; background: rgba(177,229,230,.6); }
+.db-app .ov-mint .ov-metric-icon { background: rgba(255,253,247,.6); }
+.db-app .ov-metric-label { font-size: 12px; font-weight: 600; }
+.db-app .ov-safe-progress > span, .db-app .ov-progress > span { background: #599b9e; }
+.db-app .ov-grid { gap: 18px; margin-bottom: 18px; }
+.db-app .ov-commitments { grid-template-columns: 1fr 1fr; }
+.ov-budget-list { display: grid; gap: 16px; padding-top: 4px; }
+.ov-budget-list > div > div { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; margin-bottom: 7px; }
+.ov-budget-list small { color: #587173; }
+.ov-budget-list progress { display: block; width: 100%; height: 7px; accent-color: #7bb6b8; border: 0; border-radius: 8px; overflow: hidden; }
+.ov-budget-list progress::-webkit-progress-bar { background: #EEEAD7; }
+.ov-budget-list progress::-webkit-progress-value { background: #8bc3c5; }
+.ov-budget-list progress.ov-budget-warning { accent-color: #d88e99; }
+.ov-budget-list progress.ov-budget-warning::-webkit-progress-value { background: #e9a0aa; }
+.ov-bill-list { list-style: none; padding: 0; margin: 0; }
+.ov-bill-list li { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(88,113,115,.12); font-size: 12px; }
+.ov-bill-list li:last-child { border: 0; }
+.ov-bill-list li > div { flex: 1; min-width: 0; }
+.ov-bill-list strong { overflow-wrap: anywhere; }
+.ov-bill-list small { display: block; font-size: 11px; color: #587173; margin-top: 3px; }
+.db-app .ov-bar-chart { height: 220px; }
+.db-app .ov-main .db-empty, .db-app .ov-main .db-loading { min-height: 140px; }
+@media (max-width: 1250px) { .db-app .ov-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 767px) {
+  .db-app .ov-commitments { grid-template-columns: 1fr; }
+  .db-app .ov-metric { padding: 14px; gap: 10px; min-height: 110px; }
+  .db-app .ov-metric.ov-mint, .db-app .ov-metrics .ov-metric:last-child { grid-column: 1 / -1; }
+  .db-app .ov-metric-body > strong { font-size: 18px; }
+  .ov-budget-list > div > div { flex-wrap: wrap; gap: 4px; }
+}
+
+/* Keep the floating illustration fully below the navigation boundary. */
+.db-app .ov-piggy { top: 0; bottom: auto; height: 100%; max-height: 126px; object-fit: contain; object-position: center; animation: none; }

@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from sqlalchemy import (
     Boolean,
+    Computed,
     Date,
     DateTime,
     ForeignKey,
@@ -44,6 +45,7 @@ class Account(Base):
     )
     name: Mapped[str] = mapped_column(String(120))
     kind: Mapped[str] = mapped_column(String(30))
+    family_id: Mapped[int | None] = mapped_column(ForeignKey("families.id"), nullable=True, index=True)
     opening_balance: Mapped[Decimal] = mapped_column(
         Numeric(14, 2),
         default=0,
@@ -68,14 +70,17 @@ class Budget(Base):
         ForeignKey("users.id"),
         index=True,
     )
+    family_id: Mapped[int | None] = mapped_column(ForeignKey("families.id"), nullable=True, index=True)
+    family_scope: Mapped[int] = mapped_column(Integer, Computed("COALESCE(family_id, 0)"))
     category: Mapped[str] = mapped_column(String(60))
     monthly_limit: Mapped[Decimal] = mapped_column(Numeric(12, 2))
 
     __table_args__ = (
         UniqueConstraint(
             "user_id",
+            "family_scope",
             "category",
-            name="uq_user_budget_category",
+            name="uq_budget_scope_category",
         ),
     )
 
@@ -89,6 +94,7 @@ class Goal(Base):
         index=True,
     )
     name: Mapped[str] = mapped_column(String(120))
+    family_id: Mapped[int | None] = mapped_column(ForeignKey("families.id"), nullable=True, index=True)
     target_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     saved_amount: Mapped[Decimal] = mapped_column(
         Numeric(12, 2),
@@ -116,6 +122,8 @@ def transaction_name(context):
 
 class Transaction(Base):
     __tablename__ = "transactions"
+
+    family_id: Mapped[int | None] = mapped_column(ForeignKey("families.id"), nullable=True, index=True)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(
@@ -210,3 +218,29 @@ class AccountTransfer(Base):
             name="uq_transfer_user_request",
         ),
     )
+
+class GoalContribution(Base):
+    """Reuse the legacy ledger without relinking its existing history.
+
+    Existing goal_id references savings_goals. New current_goal_id references
+    the current goals model; legacy rows retain their original foreign key.
+    """
+    __tablename__ = "goal_contributions"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    legacy_goal_id: Mapped[int | None] = mapped_column("goal_id", Integer, nullable=True)
+    current_goal_id: Mapped[int | None] = mapped_column(ForeignKey("goals.id"), nullable=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    request_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    amount: Mapped[Decimal] = mapped_column(Numeric(14, 2))
+    recorded_on: Mapped[date] = mapped_column(Date, default=date.today)
+    reversed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    __table_args__ = (UniqueConstraint("user_id", "request_id", name="uq_goal_contribution_request"),)
+
+
+class Category(Base):
+    __tablename__ = 'categories'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), index=True)
+    name: Mapped[str] = mapped_column(String(100))
+    kind: Mapped[str] = mapped_column(String(10))
+    archived: Mapped[bool] = mapped_column(Boolean, default=False)

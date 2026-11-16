@@ -2,11 +2,13 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Header
+import hashlib
+from app.models.request import TransactionRequest
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.deps import current_user
+from app.core.deps import current_user, writable_user
 from app.database import get_db
 from app.models.finance import Account, Transaction
 from app.models.user import User, now_utc
@@ -49,6 +51,7 @@ def find_transaction(
     statement = select(Transaction).where(
         Transaction.id == transaction_id,
         Transaction.user_id == user.id,
+        Transaction.family_id.is_(None),
         Transaction.deleted_at.is_(None),
     )
 
@@ -113,10 +116,19 @@ def editable(transaction: Transaction) -> None:
 )
 def create_transaction(
     data: TransactionIn,
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
+    idempotency_key: str | None = Header(default=None, min_length=1, max_length=36),
 ):
     try:
+        digest = hashlib.sha256(data.model_dump_json().encode()).hexdigest()
+        if idempotency_key:
+            db.scalar(select(User).where(User.id == user.id).with_for_update())
+            previous = db.scalar(select(TransactionRequest).where(TransactionRequest.user_id == user.id, TransactionRequest.request_key == idempotency_key).with_for_update())
+            if previous:
+                if previous.payload_hash != digest:
+                    raise HTTPException(409, "Submission key was already used with different transaction details")
+                return db.get(Transaction, previous.transaction_id)
         account = find_account(db, user, data.account_id)
         validate_expense_balance(db, account, data)
 
@@ -126,6 +138,9 @@ def create_transaction(
         )
 
         db.add(transaction)
+        db.flush()
+        if idempotency_key:
+            db.add(TransactionRequest(user_id=user.id, request_key=idempotency_key, payload_hash=digest, transaction_id=transaction.id))
         db.commit()
         db.refresh(transaction)
 
@@ -161,6 +176,7 @@ def list_transactions(
 
     statement = select(Transaction).where(
         Transaction.user_id == user.id,
+        Transaction.family_id.is_(None),
         Transaction.deleted_at.is_(None),
     )
 
@@ -229,7 +245,7 @@ def get_transaction(
 def update_transaction(
     transaction_id: int,
     data: TransactionIn,
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
     try:
@@ -294,7 +310,7 @@ def update_transaction(
 @router.delete("/{transaction_id}")
 def delete_transaction(
     transaction_id: int,
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
     try:

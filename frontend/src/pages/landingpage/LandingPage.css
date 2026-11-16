@@ -1561,3 +1561,30 @@
     transition: none;
   }
 }
+
+/* Compact feature collection. Approved hero rules above remain untouched. */
+.landing-page #features { padding-top: 48px; padding-bottom: 32px; }
+.landing-page .showcase-grid { gap: 18px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.landing-page .showcase-card { min-height: 260px; border-radius: 20px; }
+.landing-page .showcase-copy { padding: 20px 20px 8px; }
+.landing-page .showcase-copy h3 { font-size: 20px; margin: 7px 0; }
+.landing-page .showcase-copy p { font-size: 13px; line-height: 1.5; }
+.landing-page .visual-area { height: 116px; flex-basis: 116px; transform: scale(.88); transform-origin: bottom center; }
+.landing-page .landing-section:not(#features), .landing-page .max-footer { background-color: #EEEAD7; }
+@media (max-width: 1000px) { .landing-page .showcase-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .landing-page .showcase-grid { grid-template-columns: 1fr; } .landing-page #features { padding-top: 40px; } }
+.landing-page .pricing-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.landing-page .plan-price { overflow-wrap: anywhere; }
+@media (max-width: 900px) { .landing-page .pricing-grid { grid-template-columns: 1fr; } }
+
+/* Keep approved cards and hero dimensions; fit complete existing illustrations. */
+.landing-page .landing-section { background-color: #EEEAD7; }
+.landing-page .feature-art-frame { position: relative; flex: 0 0 116px; height: 116px; margin-top: auto; }
+.landing-page .feature-art-frame .visual-area { position: absolute; top: 0; left: 0; width: 147.0588%; height: 166px; margin: 0; transform: scale(.68); transform-origin: top left; }
+.landing-page .feature-art-frame .goal-illustration { height: 145px; bottom: 8px; left: 12px; max-width: 85%; object-fit: contain; }
+.landing-page .tone-cream .feature-art-frame { background: transparent; border-top: 0; }
+.landing-page .tone-cream .mini-receipt { border: 1px solid #95b8b6; box-shadow: 0 6px 14px rgba(36,73,75,.17); }
+.landing-page .tone-cream .family-avatar { border-color: #fdfbf3; outline: 1px solid #83b7b7; }
+
+/* Cards 3 and 6 only: one continuous yellow cream surface. */
+.landing-page .showcase-card.tone-cream { background: #F6E7B5; border: 1px solid transparent; }

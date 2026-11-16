@@ -1,8 +1,9 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
-from app.core.deps import current_user
+from app.core.deps import current_user, writable_user
 from app.database import get_db
 from app.models.user import User
 from app.models.finance import IncomeSource, Account, Budget, Goal
@@ -21,7 +22,8 @@ router = APIRouter(
 )
 
 
-def require_step(user: User, number: int):
+def require_step(user: User, number: int, db: Session):
+    db.scalar(select(User).where(User.id == user.id).with_for_update().execution_options(populate_existing=True))
     if user.onboarding_completed:
         raise HTTPException(
             status_code=409,
@@ -52,10 +54,10 @@ def status(
 @router.post("/about-you")
 def about_you(
     data: AboutYouIn,
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
-    require_step(user, 1)
+    require_step(user, 1, db)
 
     user.full_name = data.full_name.strip()
     user.currency = data.currency
@@ -72,10 +74,10 @@ def about_you(
 @router.post("/income")
 def income(
     data: IncomeIn,
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
-    require_step(user, 2)
+    require_step(user, 2, db)
 
     for item in data.sources:
         db.add(
@@ -97,10 +99,10 @@ def income(
 @router.post("/accounts")
 def accounts(
     data: AccountsIn,
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
-    require_step(user, 3)
+    require_step(user, 3, db)
 
     for item in data.accounts:
         db.add(
@@ -123,10 +125,10 @@ def accounts(
 @router.post("/budgets")
 def budgets(
     data: BudgetsIn,
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
-    require_step(user, 4)
+    require_step(user, 4, db)
 
     for item in data.budgets:
         db.add(
@@ -148,16 +150,21 @@ def budgets(
 @router.post("/goals")
 def goals(
     data: GoalsIn,
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
-    require_step(user, 5)
+    require_step(user, 5, db)
+
+    from app.routers.goals import check_limit
+    active_count = sum(item.saved_amount < item.target_amount for item in data.goals)
+    check_limit(db, user, active_count)
 
     for item in data.goals:
         db.add(
             Goal(
                 user_id=user.id,
                 **item.model_dump(),
+                status="completed" if item.saved_amount == item.target_amount else "active",
             )
         )
 

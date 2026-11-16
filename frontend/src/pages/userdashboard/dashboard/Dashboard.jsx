@@ -1,3 +1,4 @@
+import CashFlowTable, { CashFlowSummary } from "./CashFlow";
 
 import DashboardOverview from "./DashboardOverview";
 import Modal from "../../../components/common/Modal";
@@ -484,17 +485,25 @@ export default function Dashboard() {
 
   const [data, setData] = useState(null);
   const [accounts, setAccounts] = useState([]);
+  const [moreTransactions, setMoreTransactions] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadedSummaryPath, setLoadedSummaryPath] = useState(null);
   const [error, setError] = useState("");
   const [featureError, setFeatureError] = useState("");
 
   const [modal, setModal] = useState(null);
+  const [transactionRequestId, setTransactionRequestId] = useState(null);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(
     freshTransaction("expense", "")
   );
 
+  const [accountEditId, setAccountEditId] = useState(null);
+  const [reportMonth, setReportMonth] = useState(new Date().toLocaleDateString("en-CA").slice(0, 7));
+  const summaryPath = tab === "reports" && reportMonth ? `/dashboard?year=${reportMonth.split("-")[0]}&month=${Number(reportMonth.split("-")[1])}&include_cash_flow=true` : "/dashboard";
+  const [searchText, setSearchText] = useState("");
   const [accountForm, setAccountForm] = useState({
     name: "",
     kind: "cash",
@@ -517,6 +526,8 @@ export default function Dashboard() {
     target_date: "",
   });
 
+  const [allGoals, setAllGoals] = useState([]);
+  const [goalEditId, setGoalEditId] = useState(null);
   const [contribution, setContribution] = useState({
     id: null,
     amount: "",
@@ -532,7 +543,7 @@ export default function Dashboard() {
 
     const [summary, txns, accs] =
       await Promise.allSettled([
-        api("/dashboard"),
+        api(summaryPath),
         api("/transactions?limit=100"),
         api("/accounts"),
       ]);
@@ -547,6 +558,7 @@ export default function Dashboard() {
     }
 
     if (txns.status === "fulfilled") {
+      setMoreTransactions(txns.value?.length === 100);
       setTransactions(
         Array.isArray(txns.value) ? txns.value : []
       );
@@ -574,6 +586,8 @@ export default function Dashboard() {
       );
     }
 
+    try { setAllGoals(await api("/goals")); } catch (err) { setFeatureError(err.message); }
+    setLoadedSummaryPath(summaryPath);
     setLoading(false);
   }
 
@@ -583,12 +597,14 @@ export default function Dashboard() {
     let active = true;
 
     Promise.allSettled([
-      api("/dashboard"),
+      api(summaryPath),
       api("/transactions?limit=100"),
       api("/accounts"),
     ])
       .then(([summary, txns, accs]) => {
         if (!active) return;
+        setLoadedSummaryPath(summaryPath);
+        setError("");
 
         if (summary.status === "fulfilled") {
           setData(summary.value);
@@ -600,6 +616,7 @@ export default function Dashboard() {
         }
 
         if (txns.status === "fulfilled") {
+          setMoreTransactions(txns.value?.length === 100);
           setTransactions(
             Array.isArray(txns.value)
               ? txns.value
@@ -636,7 +653,13 @@ export default function Dashboard() {
     return () => {
       active = false;
     };
-  }, [isOverview]);
+  }, [isOverview, summaryPath]);
+
+  useEffect(() => { if (tab === "goals") api("/goals").then(setAllGoals).catch(err => setFeatureError(err.message)); }, [tab]);
+
+  async function goalStatus(goal) {
+    try { await api(`/goals/${goal.id}`, { method: "PATCH", data: { status: goal.status === "archived" ? "active" : "archived" } }); await refresh(); } catch (err) { setError(err.message); }
+  }
 
   const currency =
     data?.currency || person.currency || "LKR";
@@ -645,9 +668,7 @@ export default function Dashboard() {
     ? data.budgets
     : [];
 
-  const goals = Array.isArray(data?.goals)
-    ? data.goals
-    : [];
+  const goals = tab === "goals" ? allGoals.map(g => ({ ...g, target: g.target_amount, saved: g.saved_amount })) : (data?.goals || []);
 
   const spending = Array.isArray(
     data?.spending_by_category
@@ -659,10 +680,7 @@ export default function Dashboard() {
     ? data.six_month_trend
     : [];
 
-  const shownTransactions =
-    filter === "all"
-      ? transactions
-      : transactions.filter((t) => t.kind === filter);
+  const shownTransactions = transactions.filter(t => (filter === "all" || t.kind === filter) && `${t.description} ${t.category} ${t.txn_date}`.toLowerCase().includes(searchText.toLowerCase()));
 
   const title =
     navigation.find((item) => item.id === tab)?.label ||
@@ -696,6 +714,7 @@ export default function Dashboard() {
     kind = "expense",
     existing = null
   ) {
+    setTransactionRequestId(crypto.randomUUID());
     setEditId(existing?.id || null);
     setForm(
       existing
@@ -732,6 +751,7 @@ export default function Dashboard() {
           : "/transactions",
         {
           method: editId ? "PUT" : "POST",
+          requestId: editId ? undefined : transactionRequestId,
           data: {
             ...form,
             account_id: Number(form.account_id),
@@ -931,6 +951,8 @@ export default function Dashboard() {
 
         {loading && !data ? <Loading /> : null}
 
+        {tab === "transactions" && <CashFlowSummary data={data} currency={currency} loading={loading || loadedSummaryPath !== summaryPath} error={error} retry={refresh}/> }
+
         {/* TRANSACTIONS */}
 
         {tab === "transactions" && (
@@ -944,6 +966,7 @@ export default function Dashboard() {
           >
             <div className="db-filterbar">
               <Filter size={17} />
+              <input aria-label="Search transactions" placeholder="Search transactions" value={searchText} onChange={e => setSearchText(e.target.value)}/>
               {["all", "income", "expense"].map(
                 (item) => (
                   <button
@@ -972,6 +995,7 @@ export default function Dashboard() {
               }
               onDelete={deleteTransaction}
             />
+            {moreTransactions && <button className="db-outline-btn" disabled={loadingMore} onClick={async () => { setLoadingMore(true); try { const rows = await api(`/transactions?limit=100&offset=${transactions.length}`); setTransactions(previous => [...previous, ...rows.filter(row => !previous.some(item => item.id === row.id))]); setMoreTransactions(rows.length === 100); } catch (err) { setError(err.message); } finally { setLoadingMore(false); } }}>{loadingMore ? "Loading…" : "Load more transactions"}</button>}
           </GlassCard>
         )}
 
@@ -981,6 +1005,7 @@ export default function Dashboard() {
           <>
             <div className="db-section-actions">
               {actionButton("Add account", () => {
+                setAccountEditId(null);
                 setAccountForm({
                   name: "",
                   kind: "cash",
@@ -1010,6 +1035,10 @@ export default function Dashboard() {
                     </span>
                   </div>
                   <h3>{account.name}</h3>
+                  <div className="db-row-actions">
+                    <button onClick={() => { setAccountEditId(account.id); setAccountForm({ name: account.name, kind: account.kind, opening_balance: account.opening_balance }); setModal("account"); }}>Edit</button>
+                    <button onClick={async () => { if (!window.confirm(account.is_archived ? "Restore this account?" : "Archive this account? Linked records and balances will be preserved.")) return; try { await api(`/accounts/${account.id}/archive`, { method: "POST", data: { archived: !account.is_archived } }); await refresh(); } catch (err) { setError(err.message); } }}>{account.is_archived ? "Restore" : "Archive"}</button>
+                  </div>
                   <p>Current tracked balance</p>
                   <strong>
                     {money(
@@ -1172,6 +1201,7 @@ export default function Dashboard() {
           <>
             <div className="db-section-actions">
               {actionButton("New goal", () => {
+                setGoalEditId(null);
                 setGoalForm({
                   name: "",
                   target_amount: "",
@@ -1217,6 +1247,10 @@ export default function Dashboard() {
 
                     <Progress value={percent} />
 
+                    <div className="db-row-actions">
+                      <button onClick={() => { setGoalEditId(goal.id); setGoalForm({ name: goal.name, target_amount: goal.target, saved_amount: goal.saved, target_date: goal.target_date || "" }); setModal("goal"); }}>Edit</button>
+                      <button onClick={() => goalStatus(goal)}>{goal.status === "archived" ? "Restore" : "Archive"}</button>
+                    </div>
                     <div className="db-goal-foot">
                       <span>
                         {Math.round(percent)}%
@@ -1225,6 +1259,7 @@ export default function Dashboard() {
                       <button
                         type="button"
                         onClick={() => {
+                          if (goal.status !== "active") return;
                           setContribution({
                             id: goal.id,
                             amount: "",
@@ -1263,6 +1298,7 @@ export default function Dashboard() {
 
         {tab === "reports" && (
           <>
+            <label>Report month <input aria-label="Report month" type="month" required value={reportMonth} onChange={e => setReportMonth(e.target.value)}/></label>
             <div className="db-metric-grid">
               <MetricCard
                 title="Total balance"
@@ -1327,6 +1363,8 @@ export default function Dashboard() {
                 />
               </GlassCard>
             </div>
+
+            <CashFlowTable report={data?.cash_flow} currency={currency} loading={loading || loadedSummaryPath !== summaryPath} error={error} retry={refresh}/>
 
             <p className="db-note">
               <Info size={16} />
@@ -1653,19 +1691,16 @@ export default function Dashboard() {
 
       {modal === "account" && (
         <Modal
-          title="Add a tracked account"
+          title={accountEditId ? "Edit tracked account" : "Add a tracked account"}
           onClose={() => setModal(null)}
         >
           <form
             className="db-modal-form"
-            onSubmit={(e) =>
-              submitSimple(e, "/accounts", {
-                ...accountForm,
-                opening_balance: String(
-                  accountForm.opening_balance
-                ),
-              })
-            }
+            onSubmit={(e) => {
+              if (!accountEditId) return submitSimple(e, "/accounts", { ...accountForm, opening_balance: String(accountForm.opening_balance) });
+              e.preventDefault(); setSaving(true); setError("");
+              api(`/accounts/${accountEditId}`, { method: "PATCH", data: { ...accountForm, opening_balance: String(accountForm.opening_balance) } }).then(async () => { setModal(null); await refresh(); }).catch(err => setError(err.message)).finally(() => setSaving(false));
+            }}
           >
             <label>
               Account name
@@ -1734,7 +1769,7 @@ export default function Dashboard() {
             >
               {saving
                 ? "Saving…"
-                : "Create account"}
+                : accountEditId ? "Save changes" : "Create account"}
             </button>
           </form>
         </Modal>
@@ -1854,7 +1889,7 @@ export default function Dashboard() {
 
       {modal === "goal" && (
         <Modal
-          title="Create a savings goal"
+          title={goalEditId ? "Edit savings goal" : "Create a savings goal"}
           onClose={() => setModal(null)}
         >
           <form
@@ -1865,6 +1900,11 @@ export default function Dashboard() {
                 ...fields
               } = goalForm;
 
+              if (goalEditId) {
+                e.preventDefault(); setSaving(true); setError("");
+                api(`/goals/${goalEditId}`, { method: "PUT", data: { ...fields, target_date: target_date || null } }).then(async () => { setModal(null); await refresh(); }).catch(err => setError(err.message)).finally(() => setSaving(false));
+                return;
+              }
               submitSimple(e, "/goals", {
                 ...fields,
                 ...(target_date
@@ -1950,7 +1990,7 @@ export default function Dashboard() {
             >
               {saving
                 ? "Saving…"
-                : "Create goal"}
+                : goalEditId ? "Save changes" : "Create goal"}
             </button>
           </form>
         </Modal>

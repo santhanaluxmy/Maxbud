@@ -23,15 +23,25 @@ def read_family(user: User = Depends(current_user), db: Session = Depends(get_db
 @router.get("/members", response_model=list[MemberOut])
 def list_members(user: User = Depends(current_user), db: Session = Depends(get_db)):
     family = get_family(db, user)
-    permitted = active_users(db, family) if family.owner_user_id == user.id else [user]
-    return [member_details(member, family) for member in permitted]
+    permitted = active_users(db, family, include_inactive=True) if family.owner_user_id == user.id else [user]
+    result=[]
+    for member in permitted:
+        details=member_details(member,family)
+        membership=db.scalar(select(FamilyMembership).where(FamilyMembership.family_id==family.id,FamilyMembership.user_id==member.id,FamilyMembership.status=='active'))
+        details.update(can_view_shared=bool(membership and membership.can_view_shared),can_add_shared=bool(membership and membership.can_add_shared))
+        result.append(details)
+    return result
 
 
 @router.post("/members", response_model=MemberOut, status_code=201)
 def add_member(data: MemberCreate, user: User = Depends(current_user), db: Session = Depends(get_db)):
     try:
         family = get_family(db, user, owner_only=True, lock=True)
-        if len(active_users(db, family, lock=True)) >= PLAN_LIMITS[family_plan(db, family)]["family_members"]:
+        from app.services.subscriptions import family_access, family_capacity
+        family_access(db,family,write=True)
+        if family_plan(db,family) == "family_pack":
+            raise HTTPException(403,"Use secure invitations for Family Pack members")
+        if len(active_users(db, family, lock=True, include_inactive=True)) >= family_capacity(db,family):
             raise HTTPException(409, "Family member limit reached for your plan")
         email = str(data.email).strip().lower()
         if len(email) > 254:

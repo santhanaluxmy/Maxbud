@@ -34,3 +34,9 @@ def current_user(
         )
 
     return user
+
+
+def writable_user(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    from app.services.subscriptions import require_edit
+    require_edit(db, user)
+    return user

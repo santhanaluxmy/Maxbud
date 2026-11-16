@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.deps import current_user
+from app.core.deps import current_user, writable_user
 from app.database import get_db
 from app.models.finance import Account
 from app.models.user import User
@@ -34,7 +34,7 @@ def list_accounts(
 ):
     accounts = db.scalars(
         select(Account)
-        .where(Account.user_id == user.id)
+        .where(Account.user_id == user.id, Account.family_id.is_(None))
         .order_by(Account.id)
     ).all()
 
@@ -71,7 +71,7 @@ def list_accounts(
 )
 def create_account(
     data: AccountCreate,
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
     account = Account(
@@ -117,7 +117,7 @@ def get_account(
 def update_account(
     account_id: int,
     data: AccountPatch,
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
     try:
@@ -151,7 +151,7 @@ def update_account(
 def archive_account(
     account_id: int,
     data: AccountArchive | None = None,
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
     try:
@@ -184,7 +184,7 @@ def archive_account(
 )
 def create_transfer(
     data: TransferCreate,
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
     return record_transfer(db, user, data)

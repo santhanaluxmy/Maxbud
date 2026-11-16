@@ -4,6 +4,12 @@ from app.database import Base, engine
 
 import app.models.user
 import app.models.finance
+import app.models.family
+import app.models.platform
+import app.models.reminder
+import app.models.request
+import app.models.ai
+import app.models.notification
 
 
 target_metadata = Base.metadata

@@ -14,7 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.deps import current_user
+from app.core.deps import current_user, writable_user
 from app.database import get_db
 from app.models.finance import Budget, Transaction
 from app.models.user import User
@@ -89,6 +89,7 @@ def get_owned_budget(
         select(Budget).where(
             Budget.id == budget_id,
             Budget.user_id == user_id,
+            Budget.family_id.is_(None),
         )
     )
 
@@ -114,6 +115,7 @@ def require_unique_category(
 
     statement = select(Budget.id).where(
         Budget.user_id == user_id,
+        Budget.family_id.is_(None),
         func.lower(
             func.trim(Budget.category)
         ) == category.casefold(),
@@ -155,7 +157,7 @@ def spent_lookup(
             func.sum(Transaction.amount),
         )
         .where(
-            Transaction.user_id == user_id,
+            Transaction.user_id == user_id, Transaction.family_id.is_(None),
             Transaction.deleted_at.is_(None),
             Transaction.kind == "expense",
             Transaction.txn_date >= first,
@@ -261,7 +263,7 @@ def user_budget_views(
 
     budgets = db.scalars(
         select(Budget)
-        .where(Budget.user_id == user.id)
+        .where(Budget.user_id == user.id, Budget.family_id.is_(None))
         .order_by(Budget.category)
     ).all()
 
@@ -420,7 +422,7 @@ def get_budget(
 )
 def create_budget(
     data: BudgetCreate,
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
 
@@ -482,7 +484,7 @@ def create_budget(
 def update_budget(
     data: BudgetUpdate,
     budget_id: int = Path(gt=0),
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
 
@@ -544,7 +546,7 @@ def update_budget(
 @router.delete("/{budget_id}")
 def delete_budget(
     budget_id: int = Path(gt=0),
-    user: User = Depends(current_user),
+    user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
 

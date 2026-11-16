@@ -1,6 +1,6 @@
 
 const API_URL =
-  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+  import.meta.env?.VITE_API_URL || "http://127.0.0.1:8000";
 
 async function request(path, data) {
   let response;
@@ -45,6 +45,8 @@ export function registerUser(data) {
 }
 
 export function loginUser(data) {
+  localStorage.removeItem("maxbud_auth");
+  sessionStorage.removeItem("maxbud_auth");
   return request("/auth/login", data);
 }
 
@@ -78,7 +80,16 @@ export function getAuthSession() {
       sessionStorage.getItem("maxbud_auth") ||
       localStorage.getItem("maxbud_auth");
 
-    return stored ? JSON.parse(stored) : null;
+    if (!stored) return null;
+    const session = JSON.parse(stored);
+    const parts = session.token?.split(".");
+    if (parts?.length === 3) {
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+      if (!Number.isFinite(payload.exp) || payload.exp * 1000 <= Date.now()) {
+        localStorage.removeItem("maxbud_auth"); sessionStorage.removeItem("maxbud_auth"); return null;
+      }
+    }
+    return session;
   } catch {
     return null;
   }
