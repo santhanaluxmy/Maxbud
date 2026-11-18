@@ -154,7 +154,7 @@ class LocalFamilyAccessTests(unittest.TestCase):
         for member in members:
             sponsored = self.client.get('/subscriptions', headers=member).json()
             self.assertTrue(sponsored['test_access'])
-            self.assertEqual((sponsored['plan'], sponsored['billing_plan']), ('premium_individual', 'free'))
+            self.assertEqual((sponsored['plan'], sponsored['billing_plan']), ('free', 'free'))
         self.assertEqual(self.client.get('/family', headers=owner).json()['total_active_members'], 6)
         self.assertEqual(self.post('/family/invitations', {'email': 'seventh@example.com', 'can_view_shared': True, 'can_add_shared': True}, owner).status_code, 409)
         wallet = self.post('/family/wallets', {'name': 'Test wallet'}, owner).json()['id']

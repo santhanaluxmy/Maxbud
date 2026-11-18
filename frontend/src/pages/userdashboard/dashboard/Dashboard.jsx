@@ -38,6 +38,7 @@ import {
 import { api, money, logout } from "../../../api/client";
 import { getAuthSession } from "../../../services/authApi";
 import { navigation, dashboardPath } from "../layout/navigation";
+import { planLabels, useSubscription } from "../../../subscriptions/SubscriptionContext";
 import "./Dashboard.css";
 
 const tones = ["aqua", "pink", "cream"];
@@ -470,6 +471,7 @@ const freshTransaction = (kind, accountId) => ({
 });
 
 export default function Dashboard() {
+  const { subscription } = useSubscription();
   const navigate = useNavigate();
   const session = getAuthSession();
   const person = session?.user || {};
@@ -1372,8 +1374,8 @@ export default function Dashboard() {
             <p className="db-note">
               <Info size={16} />
               Advanced forecasts, PDF/Excel exports and
-              AI insights are planned Premium features,
-              not enabled in this version.
+              reports are planned features. AI Receipt Scanner and AI Money
+              Advisor are available from Smart Tools with your plan allowance.
             </p>
           </>
         )}
@@ -1462,7 +1464,7 @@ export default function Dashboard() {
             <div className="db-settings-row">
               <span>Current plan</span>
               <strong>
-                Free (premium plans not activated)
+                {subscription ? planLabels[subscription.plan] || subscription.plan : "Loading membership…"}
               </strong>
             </div>
             <div className="db-settings-row">

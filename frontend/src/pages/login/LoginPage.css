@@ -357,3 +357,8 @@ input:-webkit-autofill:focus {
 .auth-page .auth-card > .auth-brand { position: relative; display: block; align-self: center; width: 164px; height: 90px; margin: 0 auto 8px; overflow: hidden; flex-shrink: 0; }
 .auth-page .auth-brand .auth-logo { position: absolute; width: 164px; height: 164px; max-width: none; top: 50%; left: 50%; transform: translate(-50%,-50%); object-fit: contain; }
 .auth-page .auth-brand:focus-visible { outline: 2px solid #36787a; outline-offset: 3px; border-radius: 10px; }
+
+.auth-recovery-link { color: #24575b; font: inherit; font-size: .85rem; background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.auth-recovery-link:focus-visible { outline: 2px solid #36787a; outline-offset: 4px; }
+.recovery-page { display: grid; place-items: center; padding: 28px 16px; min-height: 100dvh; }
+.recovery-page .auth-card { width: min(100%, 460px); box-sizing: border-box; }

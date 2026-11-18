@@ -96,6 +96,7 @@ def run():
                     expect(page.get_by_role('heading', name='Our Shared Household', exact=True)).to_be_visible()
                     print('PASS: Free and Premium do not unlock household creation; Family Pack demo checkout does', flush=True)
 
+                    page.goto(WEB + '/dashboard/family/members', wait_until='domcontentloaded')
                     page.get_by_label('Invited email', exact=True).fill('member@example.com')
                     page.get_by_role('button', name='Create secure invitation', exact=True).click()
                     link = page.get_by_label('Invitation link', exact=True)
@@ -107,11 +108,13 @@ def run():
                     expect(page.get_by_role('cell', name='member@example.com', exact=True).first).to_be_visible()
                     print('PASS: secure owner invitation and member acceptance through separate browser sessions', flush=True)
 
+                    page.goto(WEB + '/dashboard/family/wallets', wait_until='domcontentloaded')
                     page.get_by_role('button', name='New shared wallet', exact=True).click()
                     dialog = page.get_by_role('dialog')
                     dialog.get_by_label('Name', exact=True).fill('Common Wallet')
                     dialog.get_by_role('button', name='Save shared record', exact=True).click()
                     expect(dialog).not_to_be_visible()
+                    page.goto(WEB + '/dashboard/family/budgets', wait_until='domcontentloaded')
                     page.get_by_role('button', name='New shared budget', exact=True).click()
                     dialog = page.get_by_role('dialog')
                     dialog.get_by_label('Category', exact=True).fill('Food')
@@ -119,7 +122,7 @@ def run():
                     dialog.get_by_role('button', name='Save shared record', exact=True).click()
                     expect(dialog).not_to_be_visible()
 
-                    member_page.reload()
+                    member_page.goto(WEB + '/dashboard/family/income', wait_until='domcontentloaded')
                     member_page.get_by_role('button', name='Add shared income', exact=True).click()
                     dialog = member_page.get_by_role('dialog')
                     dialog.get_by_label('Category', exact=True).fill('Common earnings')
@@ -129,6 +132,7 @@ def run():
                     dialog.get_by_role('button', name='Save shared record', exact=True).click()
                     expect(dialog).not_to_be_visible()
                     expect(member_page.get_by_role('cell', name='Common rental income', exact=True)).to_be_visible()
+                    member_page.goto(WEB + '/dashboard/family/expenses', wait_until='domcontentloaded')
                     member_page.get_by_role('button', name='Add shared expense', exact=True).click()
                     dialog = member_page.get_by_role('dialog')
                     dialog.get_by_label('Amount (LKR)', exact=True).fill('200')
@@ -156,7 +160,7 @@ def run():
                     assert Decimal(api('/dashboard', member)['monthly_income']) == 3000
                     print('PASS: private salary/account isolation and shared dashboard income display', flush=True)
 
-                    page.goto(WEB + '/dashboard/family')
+                    page.goto(WEB + '/dashboard/family/members', wait_until='domcontentloaded')
                     page.route('**/api/family/members/*/permissions', lambda route: route.fulfill(status=503, json={'detail': 'Synthetic permission save failure'}))
                     page.get_by_label('Allow shared editing for Member', exact=True).click()
                     expect(page.get_by_role('alert')).to_contain_text('Synthetic permission save failure')
@@ -166,13 +170,13 @@ def run():
                         page.get_by_label('Allow shared editing for Member', exact=True).uncheck()
                     assert saved_permission.value.status == 200
                     expect(page.get_by_label('Allow shared editing for Member', exact=True)).not_to_be_checked()
-                    member_page.reload()
+                    member_page.goto(WEB + '/dashboard/family/income', wait_until='domcontentloaded')
                     expect(member_page.get_by_role('button', name='Add shared income', exact=True)).to_be_disabled()
                     denied = request.post(WEB + '/api/family/income', headers={'Authorization': 'Bearer ' + member['access_token']}, data={'account_id': api('/family/wallets', member)[0]['id'], 'category': 'Blocked', 'amount': '1', 'request_id': 'revoked'})
                     assert denied.status == 403
                     with sqlite3.connect(Path(scratch) / 'flow.db') as db:
                         db.execute('UPDATE subscriptions SET plan=? WHERE user_id=?', ('premium_individual', owner['user']['id']))
-                    page.reload()
+                    page.goto(WEB + '/dashboard/family/income', wait_until='domcontentloaded')
                     expect(page.get_by_role('heading', name='Family Pack required', exact=True)).to_be_visible()
                     expect(page.get_by_role('cell', name='Common rental income', exact=True)).to_be_visible()
                     expect(page.get_by_role('button', name='Add shared income', exact=True)).to_be_disabled()

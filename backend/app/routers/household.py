@@ -327,6 +327,26 @@ def participants(user:User=Depends(current_user),db:Session=Depends(get_db)):
     return [{'id':m.id,'full_name':m.full_name} for m in active_users(db,family)]
 
 
+@router.get('/activity')
+def activity(user:User=Depends(current_user),db:Session=Depends(get_db)):
+    """Read existing explicit shared ledgers only; never expose private sources."""
+    from app.models.finance import GoalContribution
+    from app.models.platform import ExpenseShare, Settlement
+    family=service.access(db,user)
+    entries=[]
+    for row in db.scalars(select(Transaction).where(Transaction.family_id==family.id,Transaction.deleted_at.is_(None)).order_by(Transaction.id.desc()).limit(100)):
+        if row.kind not in {'income','expense','transfer_in'}: continue
+        entries.append({'key':f'transaction:{row.id}','date':row.txn_date.isoformat(),'user_id':row.user_id,'kind':'Wallet contribution (transfer)' if row.kind=='transfer_in' else 'Shared '+row.kind,'description':row.description or row.category,'amount':str(row.amount)})
+    for row,goal in db.execute(select(GoalContribution,Goal).join(Goal,Goal.id==GoalContribution.current_goal_id).where(Goal.family_id==family.id).order_by(GoalContribution.id.desc()).limit(100)):
+        entries.append({'key':f'goal:{row.id}','date':row.recorded_on.isoformat(),'user_id':row.user_id,'kind':'Goal allocation reversed' if row.reversed_at else 'Goal allocation','description':goal.name,'amount':str(row.amount)})
+    for row in db.scalars(select(Settlement).join(ExpenseShare,ExpenseShare.id==Settlement.share_id).join(Transaction,Transaction.id==ExpenseShare.transaction_id).where(Transaction.family_id==family.id).order_by(Settlement.id.desc()).limit(100)):
+        entries.append({'key':f'settlement:{row.id}','date':row.created_at.isoformat(),'user_id':row.user_id,'kind':'Reimbursement (transfer)','description':'Expense share repayment','amount':str(row.amount)})
+    names={row.id:row.full_name for row in db.scalars(select(User).where(User.id.in_({entry['user_id'] for entry in entries})))}
+    for entry in entries:
+        entry['member']=names.get(entry.pop('user_id'))
+    return sorted(entries,key=lambda row:(row['date'],row['key']),reverse=True)[:100]
+
+
 class Archived(Clean):
     archived:bool
 

@@ -1,0 +1,6 @@
+.subscription-confirmation { max-width: 760px; margin: 32px auto; }
+.subscription-confirmation h1 { margin: 16px 0; }
+.subscription-confirmation-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.subscription-plans .db-primary-btn, .subscription-plans .db-outline-btn { min-height: 44px; width: 100%; white-space: normal; }
+.subscription-status .db-outline-btn { min-height: 44px; margin-top: 12px; }
+@media (max-width: 600px) { .subscription-confirmation { margin: 16px 0; } .subscription-confirmation-actions > * { width: 100%; text-align: center; } }

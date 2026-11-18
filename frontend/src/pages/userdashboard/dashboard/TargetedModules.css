@@ -1,0 +1,63 @@
+/* Scoped polish for existing AI and administration modules only. */
+.receipt-workspace, .admin-workspace { display: grid; gap: 22px; min-width: 0; }
+.receipt-steps { display: grid; grid-template-columns: repeat(4, 1fr); list-style: none; padding: 0; margin: 0; gap: 8px; }
+.receipt-steps li { display: flex; align-items: center; gap: 9px; padding: 12px; border-bottom: 2px solid #d7d9cc; color: #587173; font-size: .82rem; }
+.receipt-steps li span { display: grid; place-items: center; border-radius: 50%; background: #fffdf7; width: 25px; height: 25px; flex-shrink: 0; }
+.receipt-steps li.current { border-color: #36787a; color: #203b40; font-weight: 650; }
+.receipt-steps li.current span { background: #B1E5E6; }
+.receipt-workspace .db-modal-form { display: grid; gap: 18px; }
+.receipt-workspace label { display: grid; gap: 8px; font-size: .88rem; font-weight: 600; }
+.receipt-workspace input, .receipt-workspace select, .admin-workspace input, .admin-workspace select { box-sizing: border-box; width: 100%; min-width: 0; padding: 12px 14px; border: 1px solid #b9ceca; border-radius: 11px; background: #fffdf7; color: #203b40; font: inherit; }
+.receipt-workspace input[type=file] { padding: 24px; border: 1px dashed #587173; background: #eeead750; cursor: pointer; }
+.receipt-workspace input[type=file]::file-selector-button { border: 0; border-radius: 9px; padding: 10px 14px; margin-right: 12px; background: #B1E5E6; color: #203b40; font-weight: 650; cursor: pointer; }
+.receipt-review fieldset { border: 1px solid #d6ddd2; border-radius: 12px; padding: 16px; gap: 12px; }
+.receipt-review legend { padding: 0 7px; color: #587173; font-size: .8rem; }
+.receipt-workspace [role=status] { background: #b1e5e650; border-radius: 12px; padding: 14px; }
+.receipt-workspace .db-primary-btn { width: fit-content; min-height: 43px; }
+.receipt-workspace .db-outline-btn { margin-left: 10px; }
+.advisor-chat { border: 1px solid #c9d8d1; background: #fffdf7; border-radius: 22px; overflow: hidden; }
+.advisor-header { display: flex; align-items: center; gap: 14px; padding: 22px; border-bottom: 1px solid #dce4da; background: #eeead740; }
+.advisor-header h2 { font-size: 1.12rem; margin: 0 0 5px; }
+.advisor-header p, .advisor-allowance { font-size: .8rem; color: #587173; }
+.advisor-allowance { margin-left: auto; white-space: nowrap; }
+.advisor-conversation { height: min(60dvh, 600px); min-height: 300px; overflow-y: auto; padding: 24px; overscroll-behavior: contain; }
+.advisor-exchange { display: grid; gap: 14px; margin-bottom: 24px; }
+.advisor-bubble { width: fit-content; max-width: 88%; padding: 16px 20px; border: 1px solid #dce4da; border-radius: 18px; overflow-wrap: anywhere; line-height: 1.8; }
+.advisor-user { justify-self: end; background: #b1e5e665; }
+.advisor-assistant { background: #eeead740; }
+.advisor-bubble > span { display: flex; gap: 7px; align-items: center; color: #587173; font-size: .74rem; font-weight: 650; }
+.advisor-bubble p { margin: 8px 0; }
+.advisor-prose { font-family: inherit; font-size: .92rem; line-height: 1.85; }
+.advisor-prose h3 { margin: 18px 0 8px; font-size: 1rem; }
+.advisor-prose ul, .advisor-prose ol { padding-left: 22px; margin: 10px 0; }
+.advisor-prose li { margin-bottom: 7px; }
+.advisor-composer { padding: 18px 22px; border-top: 1px solid #dce4da; }
+.advisor-input-row { display: flex; gap: 12px; align-items: end; }
+.advisor-composer label { display: block; margin-bottom: 8px; font-size: .8rem; color: #587173; }
+.advisor-composer textarea { flex: 1; min-width: 0; resize: vertical; padding: 13px; border: 1px solid #b9ceca; border-radius: 12px; background: #fffdf7; color: #203b40; font: inherit; line-height: 1.6; }
+.advisor-composer p { font-size: .72rem; line-height: 1.6; color: #587173; }
+.advisor-empty { max-width: 550px; margin: 20px auto; text-align: center; }
+.advisor-empty p { color: #587173; font-size: .9rem; line-height: 1.8; }
+.advisor-suggestions { display: grid; gap: 10px; }
+.advisor-suggestions button { display: flex; justify-content: space-between; gap: 12px; padding: 12px 15px; border: 1px solid #c9d8d1; border-radius: 12px; background: #eeead750; color: #203b40; font: inherit; text-align: left; cursor: pointer; }
+.admin-workspace .db-filterbar { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; align-items: center; }
+.admin-workspace nav.db-filterbar { padding: 8px; background: #fffdf7; border: 1px solid #d6ddd2; border-radius: 15px; }
+.admin-workspace .db-filterbar button { padding: 10px 14px; border-radius: 10px; min-height: 40px; color: #203b40; font-weight: 550; cursor: pointer; }
+.admin-workspace .db-filterbar button.active { background: #B1E5E6; }
+.admin-workspace .db-filterbar input { flex: 1 1 230px; }
+.admin-workspace .db-filterbar select { width: auto; max-width: 100%; }
+.admin-workspace .db-metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.admin-workspace .db-metric-grid .glass-card { padding: 20px; margin: 0; }
+.admin-workspace .db-metric-grid p { color: #587173; font-size: .8rem; margin: 0 0 12px; }
+.admin-workspace .db-metric-grid h2 { font-size: 1.9rem; margin: 0; font-variant-numeric: tabular-nums; }
+.admin-workspace .db-table-wrap { overflow-x: auto; }
+.admin-workspace .db-table { min-width: 650px; width: 100%; border-collapse: collapse; text-align: left; }
+.admin-workspace .db-table th { font-size: .73rem; font-weight: 650; color: #587173; background: #eeead750; }
+.admin-workspace .db-table td, .admin-workspace .db-table th { padding: 14px 12px; border-bottom: 1px solid #dce4da; }
+.admin-workspace .db-table tbody tr:hover { background: #b1e5e61f; }
+.admin-workspace .db-table button { min-height: 36px; padding: 7px 11px; border: 1px solid #b9ceca; border-radius: 9px; background: #fffdf7; color: #203b40; margin: 3px; cursor: pointer; }
+.admin-workspace .db-table td { font-size: .83rem; }
+:is(.receipt-workspace, .admin-workspace, .advisor-chat) :is(input, select, textarea, button, a):focus-visible { outline: 2px solid #36787a; outline-offset: 3px; }
+:is(.receipt-workspace, .admin-workspace, .advisor-chat) button:disabled { opacity: .55; cursor: not-allowed; }
+@media (max-width: 1024px) { .admin-workspace .db-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .receipt-steps { grid-template-columns: repeat(2, 1fr); } .advisor-header { flex-wrap: wrap; padding: 16px; } .advisor-allowance { margin-left: 0; } .advisor-conversation { padding: 15px; } .advisor-bubble { max-width: 100%; padding: 13px; } .advisor-composer { padding: 15px; } .advisor-composer .db-primary-btn span { display: none; } .admin-workspace .db-metric-grid .glass-card { padding: 14px; } .receipt-workspace .db-two-fields { grid-template-columns: 1fr; } }

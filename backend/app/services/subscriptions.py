@@ -23,6 +23,10 @@ def start_trial(db, user):
 
 def subscription_valid(sub, now=None):
     now = now or now_utc()
+    if sub and sub.source in {'demo', 'stripe_test'} and get_settings().ENVIRONMENT == 'production':
+        return False
+    if sub and sub.source == 'stripe_test' and sub.expires_at is None:
+        return False
     if sub and sub.source == 'test_access':
         if get_settings().ENVIRONMENT not in {'development', 'test'} or sub.plan != 'family_pack' or sub.expires_at is None:
             return False
@@ -37,6 +41,11 @@ def entitlement(db, user):
     legacy = bool(sub and sub.plan in {"free","premium"} and sub.source is None)
     valid = subscription_valid(sub,now)
     plan = (sub.plan if valid else "read_only") if sub else "legacy_free"
+    # A purchase never resets the original calendar trial. If paid access ends
+    # while that original trial remains, its personal allowance still applies.
+    trial_remaining = bool(sub and sub.source == 'stripe_test' and not valid and sub.trial_ends_at and sub.trial_ends_at > now)
+    if trial_remaining:
+        plan = 'trial'
     if legacy:
         plan="read_only" if sub.status in {"past_due","suspended"} else ("premium" if valid and sub.plan=="premium" else "free")
     sponsored_by=None
@@ -47,7 +56,6 @@ def entitlement(db, user):
     for family in families:
         sponsor=db.scalar(select(Subscription).where(Subscription.user_id==(family.sponsor_user_id or family.owner_user_id)))
         if sponsor and sponsor.plan=="family_pack" and subscription_valid(sponsor,now):
-            plan="family_pack" if family.owner_user_id==user.id else "premium_individual"
             sponsored_by=sponsor.user_id
             if sponsor.source == 'test_access':
                 test_access = True
@@ -55,16 +63,20 @@ def entitlement(db, user):
             break
     if plan=="legacy_free": plan="free"
     status=(sub.status if valid or legacy or sub.status in {"past_due","suspended"} else "expired") if sub else "legacy"
+    billing_status = status
+    if trial_remaining:
+        status = 'trialing'
     result={"plan":plan,"billing_plan":sub.plan if sub else "free","status":status,
             "can_edit":plan!="read_only","household_allowed":sponsored_by is not None or plan=="family_pack",
             "sponsored_by":sponsored_by,"source":sub.source if sub else "legacy",
+            "billing_cycle":sub.billing_cycle if sub else None,"period_started_at":sub.period_started_at if sub else None,
             "trial_started_at":sub.trial_started_at if sub else None,"trial_ends_at":sub.trial_ends_at if sub else None,
             "expires_at":sub.expires_at if sub else None,"cancel_at_period_end":bool(sub and sub.cancel_at_period_end),
             "pending_plan":sub.pending_plan if sub else None,"limits":PLAN_LIMITS[plan]}
-    result["billing_status"]=status
+    result["billing_status"]=billing_status
     result['test_access'] = test_access
     result['test_access_expires_at'] = test_access_expires
-    if sponsored_by is not None: result["status"]="active"
+    # Membership never changes the personal subscription status or limits.
     remaining=(sub.trial_ends_at-now) if sub and sub.trial_ends_at and sub.trial_ends_at>now else timedelta(0)
     result["trial_days_remaining"]=remaining.days + int(bool(remaining.seconds or remaining.microseconds))
     return result
@@ -106,6 +118,9 @@ def catalog():
         if any(Decimal(v)<0 or not Decimal(v).is_finite() for p in prices.values() for v in p.values() if v is not None): raise ValueError()
     except (ValueError,InvalidOperation,TypeError,AttributeError):
         raise HTTPException(503,"Plan price configuration is invalid")
-    return {"currency":"LKR","trial_months":3,"demo_enabled":settings.DEMO_PAYMENTS_ENABLED and settings.ENVIRONMENT!="production",
+    prices["premium_individual"]["monthly"] = "650.00"
+    prices["family_pack"]["monthly"] = "900.00"
+    stripe_ready = settings.ENVIRONMENT in {'development', 'test', 'beta'} and settings.STRIPE_SECRET_KEY.startswith(("sk_test_", "rk_test_")) and bool(settings.STRIPE_WEBHOOK_SECRET)
+    return {"stripe_test_enabled":stripe_ready,"available_billing_cycles":['monthly'],"checkout_available":{p: stripe_ready and getattr(settings, 'STRIPE_PRICE_' + ('PREMIUM' if p == 'premium_individual' else 'FAMILY') + '_MONTHLY').startswith('price_') for p in prices},"currency":"LKR","trial_months":3,"demo_enabled":settings.DEMO_PAYMENTS_ENABLED and settings.ENVIRONMENT!="production",
             "plans":[{"id":"trial","name":"Free Trial","duration":"3 calendar months","prices":{"monthly":"0.00"},"limits":PLAN_LIMITS['trial']},
                      *[{"id":p,"name":"Premium Individual" if p=='premium_individual' else "Family Pack","prices":prices[p],"limits":PLAN_LIMITS[p]} for p in prices]]}

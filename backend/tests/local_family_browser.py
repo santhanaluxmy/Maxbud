@@ -103,6 +103,7 @@ def run():
                     owner.get_by_role('button', name='Create household', exact=True).click()
                     expect(owner.get_by_role('heading', name='Unpaid Local Household', exact=True)).to_be_visible()
                     print('PASS: owner creates household with TEST ACCESS label', flush=True)
+                    owner.goto(WEB + '/dashboard/family/members', wait_until='domcontentloaded')
                     member_pages = []
                     for email, person in zip(MEMBER_EMAILS, people[1:]):
                         owner.get_by_label('Invited email', exact=True).fill(email)
@@ -128,6 +129,7 @@ def run():
                     member_headers = {'Authorization': 'Bearer ' + people[1]['access_token']}
                     body = {'account_id': wallet, 'category': 'Common', 'amount': '1000', 'request_id': 'local-income'}
                     assert request.post(WEB + '/api/family/income', headers=member_headers, data=body).status == 201
+                    owner.goto(WEB + '/dashboard/family/income', wait_until='domcontentloaded')
                     owner.reload(wait_until='domcontentloaded')
                     expect(owner.get_by_role('cell', name='Common', exact=True)).to_be_visible()
                     sandbox.change('revoke', OWNER_EMAIL, OWNER_EMAIL, PASSWORD)

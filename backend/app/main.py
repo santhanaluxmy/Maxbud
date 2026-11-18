@@ -14,7 +14,8 @@ from app.routers import (
     onboarding,
     transaction,
 )
-from app.routers import budgets
+from app.routers import budgets, recovery, billing
+from app.models import access  # Register additive recovery/billing tables for migrations.
 from app.routers import family, goals, reminders, settings as account_settings, admin, ai, notifications, subscriptions, household
 
 
@@ -63,6 +64,8 @@ app.add_middleware(
 
 app.include_router(account.router)
 app.include_router(auth.router)
+app.include_router(recovery.router)
+app.include_router(billing.router)
 app.include_router(onboarding.router)
 app.include_router(transaction.router)
 app.include_router(dashboard.router)

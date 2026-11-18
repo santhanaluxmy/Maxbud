@@ -1587,4 +1587,4 @@
 .landing-page .tone-cream .family-avatar { border-color: #fdfbf3; outline: 1px solid #83b7b7; }
 
 /* Cards 3 and 6 only: one continuous yellow cream surface. */
-.landing-page .showcase-card.tone-cream { background: #F6E7B5; border: 1px solid transparent; }
+.landing-page .showcase-card.tone-cream { background: #F6E7B5; border: 1px solid rgba(255, 255, 255, 0.85); }

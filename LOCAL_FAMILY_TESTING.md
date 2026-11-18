@@ -41,7 +41,7 @@ Open **http://127.0.0.1:5184**. Use six separate browser profiles or isolated br
 | Member 4 | roommate4@maxbud.example.com |
 | Member 5 | roommate5@maxbud.example.com |
 
-Complete onboarding separately for each person. These accounts start Free, with no financial records. Granting changes only the owner; accepted members receive normal sponsored personal Premium and configured shared permissions. Demo checkout is disabled. Google login and paid AI providers are disabled in this sandbox process. Normal backend authorization still applies. Keep all test data synthetic.
+Complete onboarding separately for each person. These accounts start Free, with no financial records. Granting changes only the owner; accepted members receive configured shared permissions; personal entitlements remain independent. Demo checkout is disabled. Google login and paid AI providers are disabled in this sandbox process. Normal backend authorization still applies. Keep all test data synthetic.
 
 ## 3. Screen checklist
 
@@ -60,7 +60,7 @@ Complete onboarding separately for each person. These accounts start Free, with 
 | Personal Reports | Confirm only the signed-in user's transactions, month totals and running balance; shared transactions must stay separate. |
 | Family financial report / Shared overview | Confirm household income, expenses, wallet balance and funding totals; no private account details. Detailed dated shared monthly cash-flow report is currently missing. |
 | Permissions/removal | Disable one member's shared editing/reports, then remove that member. Reuse the existing session to confirm access is denied; personal records and historical shared records remain. Restore/join only through the existing invitation flow. |
-| Expiry/revocation | Refresh all profiles: shared editing locks while household/history remain. Sponsored users return to their own Free entitlements. Check Premium limits again; ordinary Free personal editing remains available within its limits. |
+| Expiry/revocation | Refresh all profiles: shared editing locks while household/history remain. Personal entitlements stay unchanged; sponsored shared editing ends. Check Premium limits again; ordinary Free personal editing remains available within its limits. |
 
 ## 4. Revoke safely
 

@@ -1,4 +1,10 @@
 .family-page { display: grid; gap: 22px; }
+.family-section-nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.family-section-nav a { padding: 10px 14px; border: 1px solid #b1e5e6; border-radius: 12px; color: inherit; text-decoration: none; font-size: .85rem; }
+.family-section-nav a.active { background: #b1e5e6; font-weight: 600; }
+.family-section-nav a:focus-visible { outline: 2px solid #448e88; outline-offset: 3px; }
+.family-task-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 18px; }
+.family-form select { width: 100%; padding: 12px; border: 1px solid #b1e5e6; border-radius: 12px; background: #fffdf7; color: inherit; font: inherit; }
 .family-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .family-overview dt { color: var(--text-muted, #626b6b); font-size: .85rem; }
 .family-overview dd { margin: 6px 0 0; font-weight: 600; overflow-wrap: anywhere; }
@@ -36,3 +42,20 @@
 .family-goal-history summary { cursor: pointer; font-weight: 600; }
 @media (max-width: 600px) { .family-goal-numbers { grid-template-columns: 1fr; gap: 10px; } .family-shared-goal { padding: 15px; } .family-contributors li { flex-wrap: wrap; } }
 .family-report-grid { margin-top: 18px; }
+
+/* Keep household controls aligned with the existing MaxBud forms and cards. */
+.family-page .family-form { max-width: 720px; }
+.family-page .family-form input[type=checkbox] { width: 16px; height: 16px; accent-color: #36787a; }
+.family-page .family-table label { display: inline-flex; align-items: center; gap: 7px; padding: 5px; }
+.family-page .family-shared-goal details > summary { color: #24575b; padding: 9px 0; cursor: pointer; }
+.family-page .family-shared-goal details[open] { padding-bottom: 10px; }
+.family-page .family-shared-goal .family-actions { align-items: center; }
+.family-page .family-form input:disabled, .family-page .family-form select:disabled { opacity: .6; }
+.family-page .family-table tbody tr:hover { background: #b1e5e61f; }
+.family-page .family-form label:has(input[type=checkbox]) { display: flex; align-items: center; gap: 10px; }
+@media (max-width: 600px) { .family-page .family-actions { justify-content: flex-start; } .family-page .family-actions > button { min-height: 42px; } }
+
+.family-page { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.family-page > .db-note { display: block; overflow-wrap: anywhere; }
+.family-page .db-panel-heading { flex-wrap: wrap; gap: 12px; }
+.family-page .db-panel-heading > div { min-width: 0; }

@@ -35,9 +35,10 @@ router = APIRouter(
 )
 
 
-def auth_result(user: User) -> dict:
+def auth_result(user: User, db: Session) -> dict:
+    from app.core.security import session_version
     return {
-        "access_token": make_token(user.id),
+        "access_token": make_token(user.id, session_version(db, user.id)),
         "token_type": "bearer",
         "user": user,
         "onboarding_completed": user.onboarding_completed,
@@ -203,7 +204,7 @@ def register(
         db.rollback()
         raise
 
-    return auth_result(user)
+    return auth_result(user, db)
 
 
 @router.post(
@@ -301,7 +302,7 @@ def login(
             detail="Account disabled",
         )
 
-    return auth_result(user)
+    return auth_result(user, db)
 
 
 @router.post(
@@ -361,7 +362,7 @@ def google_login(
                 detail="Account unavailable",
             )
 
-        return auth_result(user)
+        return auth_result(user, db)
 
     email = str(payload["email"]).strip().lower()
 
@@ -420,7 +421,7 @@ def google_login(
         db.rollback()
         raise
 
-    return auth_result(user)
+    return auth_result(user, db)
 
 
 @router.get(

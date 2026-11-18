@@ -229,9 +229,7 @@ export default function LoginPage() {
                   Remember me
                 </label>
 
-                <span className="auth-muted">
-                  Forgot password? (Coming soon)
-                </span>
+                <Link to="/forgot-password" className="auth-recovery-link">Forgot password?</Link>
               </div>
 
               <button

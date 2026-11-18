@@ -25,8 +25,21 @@ def events(db, user):
         if budget["used_percent"] >= 80:
             state = "overspent" if budget["used_percent"] >= 100 else "warning"
             rows.append({"key": f"budget:{today:%Y-%m}:{budget['category']}:{state}", "message": f"{budget['category']} budget: {budget['used_percent']}% used", "path": "/dashboard/budgets"})
-    for goal in db.scalars(select(Goal).where(Goal.user_id == user.id, Goal.status == "completed")):
+    for goal in db.scalars(select(Goal).where(Goal.user_id == user.id, Goal.family_id.is_(None), Goal.status == "completed")):
         rows.append({"key": f"goal:{goal.id}:completed", "message": f"Goal completed: {goal.name}", "path": "/dashboard/goals"})
+    # Shared notifications require current active membership and view permission.
+    try:
+        from app.services.household import access
+        family = access(db, user)
+    except HTTPException as exc:
+        if exc.status_code not in {403, 404}:
+            raise
+    else:
+        for bill in db.scalars(select(Reminder).where(Reminder.family_id == family.id, Reminder.is_active.is_(True), Reminder.due_date <= today + timedelta(days=7))):
+            state = "overdue" if bill.due_date < today else "upcoming"
+            rows.append({"key": f"shared-bill:{family.id}:{bill.id}:{bill.due_date}", "message": f"Household bill: {bill.name} — {bill.amount} LKR due {bill.due_date} ({state})", "path": "/dashboard/family/bills"})
+        for goal in db.scalars(select(Goal).where(Goal.family_id == family.id, Goal.status == 'completed')):
+            rows.append({"key": f"shared-goal:{family.id}:{goal.id}:completed", "message": f"Household goal completed: {goal.name}", "path": "/dashboard/family/goals"})
     return rows
 
 

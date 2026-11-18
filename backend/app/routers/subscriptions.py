@@ -40,12 +40,27 @@ def plans(): return catalog()
 
 @router.get('')
 def current(user: User=Depends(current_user),db:Session=Depends(get_db)):
-    return {**entitlement(db,user),'catalog':catalog()}
+    from sqlalchemy import inspect
+    from app.models.access import StripeAccount
+    account = db.get(StripeAccount,user.id) if inspect(db.connection()).has_table('stripe_test_accounts') else None
+    portal = False
+    if account and account.subscription_id:
+        from app.routers.billing import validate_portal_configuration
+        try:
+            validate_portal_configuration()
+            portal = True
+        except HTTPException:
+            pass
+    return {**entitlement(db,user),'catalog':catalog(),'billing_portal_available':portal,
+            'stripe_subscription_exists':bool(account and account.subscription_id),
+            'checkout_pending':bool(account and account.checkout_id and not account.subscription_id)}
 
 
 @router.post('/checkout',status_code=201)
 def checkout(data:Selection,user:User=Depends(current_user),db:Session=Depends(get_db)):
     demo_only()
+    if data.billing_cycle != 'monthly':
+        raise HTTPException(422, 'Only monthly subscriptions are available.')
     db.scalar(select(User).where(User.id==user.id).with_for_update())
     previous=db.scalar(select(DemoCheckout).where(DemoCheckout.user_id==user.id,DemoCheckout.request_id==data.request_id).with_for_update())
     if previous:
@@ -105,9 +120,21 @@ class Change(BaseModel):
 
 @router.post('/schedule')
 def schedule(data:Change,user:User=Depends(current_user),db:Session=Depends(get_db)):
+    if data.billing_cycle != 'monthly':
+        raise HTTPException(422, 'Only monthly subscriptions are available.')
     db.scalar(select(User).where(User.id==user.id).with_for_update())
     sub=db.scalar(select(Subscription).where(Subscription.user_id==user.id).with_for_update())
     if sub is None or sub.source!='demo': raise HTTPException(409,'No own demo subscription to change')
     sub.pending_plan=data.plan;sub.pending_cycle=data.billing_cycle
     db.commit()
     return {**entitlement(db,user),'message':'Selection saved for the next checkout. Existing access lasts until period end; renewal requires a new successful demo checkout.'}
+
+
+@router.post('/resume')
+def resume(user:User=Depends(current_user),db:Session=Depends(get_db)):
+    db.scalar(select(User).where(User.id==user.id).with_for_update())
+    sub=db.scalar(select(Subscription).where(Subscription.user_id==user.id).with_for_update())
+    if not sub or sub.source!='demo' or not sub.expires_at or sub.expires_at<=now_utc():
+        raise HTTPException(409,'No current demo period can be resumed')
+    sub.cancel_at_period_end=False;sub.status='active'
+    db.commit();return entitlement(db,user)

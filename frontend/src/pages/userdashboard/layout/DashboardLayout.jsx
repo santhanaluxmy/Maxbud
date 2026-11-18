@@ -26,7 +26,7 @@ export default function DashboardLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const person = getAuthSession()?.user || {};
   const firstName = person.full_name?.trim().split(" ")[0] || "there";
-  const pageTitle = navigation.find((item) => dashboardPath(item.id) === pathname.replace(/\/$/, ""))?.label || "Overview";
+  const pageTitle = navigation.find((item) => dashboardPath(item.id) === pathname.replace(/\/$/, ""))?.label || (pathname.startsWith("/dashboard/family/") ? "Shared Household" : "Overview");
   const results = navigation.filter((item) => `${item.label} ${item.id}`.toLowerCase().includes(search.trim().toLowerCase()));
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export default function DashboardLayout() {
       <nav className="db-nav" aria-label="Dashboard pages">
         {navigationGroups.map(group => <div className="db-nav-group" key={group.label || "overview"}>
           {group.label && <p className="db-nav-heading">{group.label}</p>}
-          {group.items.map(({ id, label, icon: Icon }) => <NavLink aria-label={label} title={label} key={id} to={dashboardPath(id)} end className={({ isActive }) => `db-nav-item ${isActive ? "selected" : ""}`} onClick={() => setMenuOpen(false)}><Icon size={19} strokeWidth={1.8}/><span>{label}</span></NavLink>)}
+          {group.items.map(({ id, label, icon: Icon }) => <NavLink aria-label={label} title={label} key={id} to={dashboardPath(id)} end={id !== "family"} className={({ isActive }) => `db-nav-item ${isActive ? "selected" : ""}`} onClick={() => setMenuOpen(false)}><Icon size={19} strokeWidth={1.8}/><span>{label}</span></NavLink>)}
         </div>)}
         {person.role === "admin" && <NavLink className="db-nav-item" to="/dashboard/admin">Administration</NavLink>}
       </nav>

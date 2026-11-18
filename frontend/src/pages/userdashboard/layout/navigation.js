@@ -2,7 +2,7 @@ import { LayoutDashboard, Wallet, ArrowLeftRight, PieChart, Target, LineChart, S
 
 export const navigationGroups = [
   { label: "", items: [{ id: "overview", label: "Overview", icon: LayoutDashboard }] },
-  { label: "Money Management", items: [
+  { label: "Personal Finance", items: [
     { id: "accounts", label: "Accounts", icon: Wallet },
     { id: "transactions", label: "Transactions", icon: ArrowLeftRight },
     { id: "budgets", label: "Budgets", icon: PieChart },
@@ -14,7 +14,7 @@ export const navigationGroups = [
     { id: "scan", label: "AI Receipt Scanner", icon: ScanLine },
     { id: "advisor", label: "AI Advisor", icon: Sparkles },
   ] },
-  { label: "Household", items: [{ id: "family", label: "Family Management", icon: Users }] },
+  { label: "Shared Household", items: [{ id: "family", label: "Family Management", icon: Users }] },
   { label: "Account", items: [
     { id: "upgrade", label: "Subscription", icon: CreditCard },
     { id: "settings", label: "Settings", icon: Settings },

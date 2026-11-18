@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
-from app.core.security import read_token
+from app.core.security import token_claims, session_version
 
 
 bearer = HTTPBearer()
@@ -18,7 +18,8 @@ def current_user(
     db: Session = Depends(get_db),
 ):
     try:
-        user_id = read_token(credentials.credentials)
+        claims = token_claims(credentials.credentials)
+        user_id = int(claims["sub"])
     except (jwt.PyJWTError, ValueError, TypeError):
         raise HTTPException(
             status_code=401,
@@ -33,6 +34,8 @@ def current_user(
             detail="Inactive or unknown user",
         )
 
+    if claims.get("ver", 0) != session_version(db, user_id):
+        raise HTTPException(401, "Session ended. Please sign in again.")
     return user
 
 

@@ -455,10 +455,7 @@ export default function LandingPage() {
               Everything You Need to Budget Smarter
             </h2>
 
-            <p>
-              Beautiful, simple tools for everyday
-              money management.
-            </p>
+
           </div>
 
           <div className="showcase-grid">
@@ -540,11 +537,7 @@ export default function LandingPage() {
               Choose the Right Plan for Your Money
             </h2>
 
-            <p>
-              Start free with everyday budgeting.
-              Explore advanced AI-powered tools and
-              family management with Premium.
-            </p>
+
           </div>
 
           {pricingError && <p role="alert">{pricingError} You can still explore MaxBud and register for a trial.</p>}

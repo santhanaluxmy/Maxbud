@@ -193,7 +193,7 @@ export default function RegisterPage() {
         <div className="auth-panel">
           <div className="auth-card">
 
-            <Link to="/">
+            <Link to="/" className="auth-brand" aria-label="MaxBud home">
               <img
                 src={logo}
                 className="auth-logo"

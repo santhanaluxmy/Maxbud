@@ -25,6 +25,8 @@ def owned(db, user, goal_id):
         from app.services.subscriptions import family_access
         family_access(db, family, write=True)
         return goal
+    from app.services.subscriptions import require_edit
+    require_edit(db, user)
     db.scalar(select(User).where(User.id == user.id).with_for_update())
     goal = db.scalar(select(Goal).where(Goal.id == goal_id, Goal.user_id == user.id, Goal.family_id.is_(None)).with_for_update().execution_options(populate_existing=True))
     if goal is None:
@@ -65,7 +67,7 @@ def listing(scope: Literal["me", "family"] = "me", user: User = Depends(current_
 
 
 @router.post("", status_code=201)
-def create(data: GoalItem, scope: Literal["me", "family"] = "me", user: User = Depends(writable_user), db: Session = Depends(get_db)):
+def create(data: GoalItem, scope: Literal["me", "family"] = "me", user: User = Depends(current_user), db: Session = Depends(get_db)):
     family = None
     if scope == "family":
         family = shared_family(db, user, owner_only=True)
@@ -76,6 +78,9 @@ def create(data: GoalItem, scope: Literal["me", "family"] = "me", user: User = D
             raise HTTPException(422, "Shared goals start at zero; record each member's contribution in the ledger")
         if not data.name.strip():
             raise HTTPException(422, "Goal name is required")
+    if family is None:
+        from app.services.subscriptions import require_edit
+        require_edit(db, user)
     if data.saved_amount > data.target_amount:
         raise HTTPException(422, "Saved amount cannot exceed target")
     complete = data.saved_amount == data.target_amount
@@ -90,7 +95,7 @@ def create(data: GoalItem, scope: Literal["me", "family"] = "me", user: User = D
 
 
 @router.put("/{goal_id}")
-def update(goal_id: int, data: GoalItem, user: User = Depends(writable_user), db: Session = Depends(get_db)):
+def update(goal_id: int, data: GoalItem, user: User = Depends(current_user), db: Session = Depends(get_db)):
     goal = owned(db, user, goal_id)
     if goal.family_id is not None:
         data.name = data.name.strip()
@@ -121,7 +126,7 @@ class Contribution(BaseModel):
 
 
 @router.post("/{goal_id}/contribute")
-def contribute(goal_id: int, data: Contribution, user: User = Depends(writable_user), db: Session = Depends(get_db)):
+def contribute(goal_id: int, data: Contribution, user: User = Depends(current_user), db: Session = Depends(get_db)):
     try:
         return record_contribution(db, user, goal_id, data)
     except IntegrityError:
@@ -194,7 +199,7 @@ class StatusChange(BaseModel):
 
 
 @router.patch("/{goal_id}")
-def change_status(goal_id: int, data: StatusChange, user: User = Depends(writable_user), db: Session = Depends(get_db)):
+def change_status(goal_id: int, data: StatusChange, user: User = Depends(current_user), db: Session = Depends(get_db)):
     goal = owned(db, user, goal_id)
     balance = shared_balance(db, goal) if goal.family_id is not None else goal.saved_amount
     status = "completed" if data.status == "active" and balance >= goal.target_amount else data.status

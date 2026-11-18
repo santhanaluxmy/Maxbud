@@ -10,6 +10,7 @@ import app.models.reminder
 import app.models.request
 import app.models.ai
 import app.models.notification
+import app.models.access
 
 
 target_metadata = Base.metadata

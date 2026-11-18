@@ -36,6 +36,19 @@ class Settings(BaseSettings):
     RECEIPT_STORAGE_DIR: str = str(BASE_DIR / "private_receipts")
 
     GOOGLE_CLIENT_ID: str = ""
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""
+    SMTP_SECURITY: Literal["starttls", "ssl"] = "starttls"
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_PRICE_PREMIUM_MONTHLY: str = ""
+    STRIPE_PRICE_PREMIUM_YEARLY: str = ""
+    STRIPE_PRICE_FAMILY_MONTHLY: str = ""
+    STRIPE_PRICE_FAMILY_YEARLY: str = ""
+    STRIPE_PORTAL_CONFIGURATION: str = ""
     FRONTEND_ORIGIN: str = "http://localhost:5173"
 
     model_config = SettingsConfigDict(

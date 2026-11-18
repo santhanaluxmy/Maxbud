@@ -26,7 +26,7 @@ The capacity is at most six total users, including the owner. Existing server co
 6. The owner creates household wallets and category budgets. Authorized members record common income in those wallets, or record shared expenses using a household wallet/their own personal payment account.
 7. Personal sections show each person's private financial records. Family Management and the shared dashboard show only explicitly shared records.
 
-Members do not need their own Family Pack to join a sponsored household. Their own subscription is not overwritten or canceled. When the sponsor expires/downgrades/is suspended, new shared edits and invitations stop; authorized shared history remains readable. Members' personal account records are preserved and their own personal-plan entitlement continues independently. Removed members lose household access but retain their personal accounts and records.
+Members do not need their own Family Pack to join a sponsored household. Their own subscription is not overwritten or canceled. When the sponsor expires/downgrades/is suspended, new shared edits and invitations stop; authorized shared history remains readable. Members' personal account records are preserved and their own personal-plan entitlement continues independently; household membership does not grant personal Premium or additional AI quota. Removed members lose household access but retain their personal accounts and records.
 
 ## Shared income and financial accounting
 
@@ -50,7 +50,7 @@ The new income listing exposes shared facts and the authenticated recorder's nam
 
 ## UI and permissions
 
-- Family Management shows the household's shared income/expenses/net/wallet summary, a shared-income form/history, wallets, budgets, expenses, bills, reimbursements and shared goals using the existing pastel/glass design.
+- Family Management is the shared summary/task chooser. Wallets, income, expenses/splitting, budgets, goals, reimbursements, reports, bills and membership now have separate `/dashboard/family/:section` routes, using the existing pastel/glass design. See [member flow repair and verification](MAXBUD_FAMILY_MEMBER_REPAIR.md). Personal Finance retains its independent routes.
 - Shared income can only select a household wallet. Expense/split flows retain their existing explicit funding-account choices.
 - The shared dashboard's income card/chart now show genuine common income. Personal wallet contributions are displayed separately as transfers.
 - Owners define shared budget limits and manage wallets/invitations. Members with shared-entry permission can add common income/expenses and participate in shared goals. View-only members can read shared reports but cannot add records.

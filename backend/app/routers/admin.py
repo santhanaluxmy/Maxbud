@@ -13,7 +13,7 @@ from app.models.family import Subscription
 from app.models.ai import AIUsage, AdvisorMessage
 from app.models.platform import DemoCheckout, PlatformEvent
 from app.schemas.auth import UserOut
-from app.services.subscriptions import entitlement, subscription_valid
+from app.services.subscriptions import entitlement, subscription_valid, catalog
 
 router=APIRouter(prefix='/admin',tags=['Admin'])
 
@@ -122,6 +122,6 @@ def ai_usage(user:User=Depends(admin),db:Session=Depends(get_db)):
 @router.get('/settings')
 def settings(user:User=Depends(admin)):
     s=get_settings()
-    return {'environment':s.ENVIRONMENT,'demo_payments_enabled':s.DEMO_PAYMENTS_ENABLED,'family_member_limit':s.FAMILY_PACK_MEMBER_LIMIT,
+    return {'plan_catalog':catalog(),'environment':s.ENVIRONMENT,'demo_payments_enabled':s.DEMO_PAYMENTS_ENABLED,'family_member_limit':s.FAMILY_PACK_MEMBER_LIMIT,
             'ai_configured':bool(s.GROQ_API_KEY and s.GROQ_CHAT_MODEL and s.GROQ_VISION_MODEL),'chat_model':s.GROQ_CHAT_MODEL,'vision_model':s.GROQ_VISION_MODEL,
             'note':'API keys, database credentials and signing secrets are never returned.'}
