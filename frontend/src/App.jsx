@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "./api/client";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import LandingPage from "./pages/landingpage/LandingPage";
 import PasswordRecovery from "./pages/login/PasswordRecovery";
 import LoginPage from "./pages/login/LoginPage";
@@ -10,6 +10,8 @@ import Dashboard from "./pages/userdashboard/dashboard/Dashboard";
 import DashboardLayout from "./pages/userdashboard/layout/DashboardLayout";
 import { getAuthSession } from "./services/authApi";
 import FamilyPage from "./pages/userdashboard/family/FamilyPage";
+import InvitationPage from "./pages/userdashboard/family/InvitationPage";
+import { captureInvitation } from "./services/familyInvitation";
 import Notifications from "./pages/userdashboard/dashboard/Notifications";
 import Upgrade from "./pages/userdashboard/dashboard/Upgrade";
 import PaymentSuccess from "./pages/userdashboard/dashboard/PaymentSuccess";
@@ -20,12 +22,6 @@ import Settings from "./pages/userdashboard/dashboard/Settings";
 import Reminders from "./pages/userdashboard/dashboard/Reminders";
 import "./pages/userdashboard/dashboard/Dashboard.css";
 
-// Invitation tokens use a URL fragment so they are not sent in server access logs.
-if (window.location.hash.startsWith("#invite=")) {
-  sessionStorage.setItem("maxbud_invitation", decodeURIComponent(window.location.hash.slice(8)));
-  window.history.replaceState(null, "", window.location.pathname + window.location.search);
-}
-
 function AdminRoute() {
   const [state, setState] = useState("loading");
   useEffect(() => { let active = true; api("/auth/me").then(user => { if (active) setState(user.role === "admin" ? "allowed" : "denied"); }).catch(() => { if (active) setState("denied"); }); const expiry = window.setInterval(() => { if (!getAuthSession()?.token) window.location.assign("/login"); }, 1000); return () => { active = false; window.clearInterval(expiry); }; }, []);
@@ -34,18 +30,29 @@ function AdminRoute() {
 }
 
 function ProtectedRoute({ children, needsOnboarding = false }) {
+  const { pathname } = useLocation();
   const session = getAuthSession();
   if (!session?.token) return <Navigate to="/login" replace />;
-  if (needsOnboarding && !session.onboarding_completed && session.user?.role !== "admin") return <Navigate to="/onboarding" replace />;
+  const sharedHousehold = pathname === "/dashboard/family" || pathname.startsWith("/dashboard/family/");
+  if (needsOnboarding && !sharedHousehold && !session.onboarding_completed && session.user?.role !== "admin") return <Navigate to="/onboarding" replace />;
   return children;
 }
 
 export default function App() {
+  const { hash } = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => {
+    // Capture before authentication redirects, including older /dashboard/family
+    // links and links opened through client-side navigation.
+    if (captureInvitation(hash)) navigate("/invite", { replace: true });
+  }, [hash, navigate]);
+  if (hash.startsWith("#invite=")) return <p role="status">Opening your household invitation…</p>;
   return <Routes>
     <Route path="/" element={<LandingPage/>}/>
     <Route path="/login" element={<LoginPage/>}/>
     <Route path="/forgot-password" element={<PasswordRecovery/>}/>
     <Route path="/register" element={<RegisterPage/>}/>
+    <Route path="/invite" element={<InvitationPage/>}/>
     <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage/></ProtectedRoute>}/>
     <Route path="/dashboard" element={<ProtectedRoute needsOnboarding><SubscriptionProvider><DashboardLayout/></SubscriptionProvider></ProtectedRoute>}>
       <Route index element={<Dashboard/>}/>

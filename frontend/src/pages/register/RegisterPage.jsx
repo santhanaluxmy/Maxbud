@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 
 import logo from "../../assets/images/maxbud-logo.png";
-import financeHero from "../../assets/images/maxbud hero.png";
+import financeHero from "../../assets/images/maxbud2.png";
+import { authDestination, pendingInvitation } from "../../services/familyInvitation";
 
 import {
   registerUser,
@@ -36,6 +37,7 @@ export default function RegisterPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   function change(e) {
@@ -47,6 +49,7 @@ export default function RegisterPage() {
     }));
 
     setFeedback("");
+    setFieldErrors(previous => ({ ...previous, [name]: "" }));
   }
 
   async function handleSubmit(e) {
@@ -57,44 +60,14 @@ export default function RegisterPage() {
     const cleanEmail = values.email.trim().toLowerCase();
     const password = values.password;
 
-    if (fullName.length < 2) {
-      setFeedback(
-        "Full name must contain at least 2 characters."
-      );
-      return;
-    }
-
-    if (fullName.length > 100) {
-      setFeedback(
-        "Full name must not exceed 100 characters."
-      );
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setFeedback("Enter a valid email address.");
-      return;
-    }
-
-    const passwordValid =
-      password.length >= 8 &&
-      password.length <= 128 &&
-      /[A-Z]/.test(password) &&
-      /[a-z]/.test(password) &&
-      /[0-9]/.test(password) &&
-      /[^A-Za-z0-9]/.test(password);
-
-    if (!passwordValid) {
-      setFeedback(
-        "Password must have 8-128 characters, including uppercase, lowercase, number and symbol."
-      );
-      return;
-    }
-
-    if (password !== values.confirmPassword) {
-      setFeedback("Passwords do not match.");
-      return;
-    }
+    const errors = {};
+    if (!cleanEmail) errors.email = "Please enter your email address.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) errors.email = "Please enter a valid email address.";
+    if (fullName.length < 2 || fullName.length > 100) errors.name = "Full name must contain 2–100 characters.";
+    if (!(password.length >= 8 && password.length <= 128 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password))) errors.password = "Use 8–128 characters with uppercase, lowercase, a number and a symbol.";
+    if (password !== values.confirmPassword) errors.confirmPassword = "Passwords do not match.";
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) return;
 
     setLoading(true);
 
@@ -114,14 +87,12 @@ export default function RegisterPage() {
 
       saveAuthSession(result, false);
 
-      navigate("/onboarding", {
+      navigate(authDestination(result), {
         replace: true,
       });
     } catch (error) {
-      setFeedback(
-        error.message ||
-          "Unable to create account. Please try again."
-      );
+      if (error.message === "Email already registered") setFieldErrors({ email: error.message });
+      else setFeedback(error.message || "Unable to create account. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -152,9 +123,7 @@ export default function RegisterPage() {
       saveAuthSession(result, false);
 
       navigate(
-        result.onboarding_completed
-          ? "/dashboard"
-          : "/onboarding",
+        authDestination(result),
         { replace: true }
       );
     } catch (error) {
@@ -179,7 +148,7 @@ export default function RegisterPage() {
 
           <img
             src={financeHero}
-            alt="MaxBud finance illustration"
+            alt="MaxBud savings illustration"
           />
 
           <h2>Start your financial journey.</h2>
@@ -206,6 +175,7 @@ export default function RegisterPage() {
             <p>
               Let's start your journey with MaxBud.
             </p>
+            {pendingInvitation() && <p role="status">Create your own account using the invited email. Your household invitation will be waiting after registration.</p>}
 
             <form onSubmit={handleSubmit} noValidate>
 
@@ -218,6 +188,9 @@ export default function RegisterPage() {
 
                   <input
                     type="text"
+                    aria-label="Full Name"
+                    aria-invalid={Boolean(fieldErrors.name)}
+                    aria-describedby={fieldErrors.name ? "name-error" : undefined}
                     name="name"
                     placeholder="Enter your full name"
                     autoComplete="name"
@@ -227,6 +200,7 @@ export default function RegisterPage() {
                     disabled={loading}
                   />
                 </span>
+                {fieldErrors.name && <span id="name-error" className="auth-field-error" role="alert">{fieldErrors.name}</span>}
               </label>
 
               {/* Email */}
@@ -238,6 +212,9 @@ export default function RegisterPage() {
 
                   <input
                     type="email"
+                    aria-label="Email Address"
+                    aria-invalid={Boolean(fieldErrors.email)}
+                    aria-describedby={fieldErrors.email ? "email-error" : undefined}
                     name="email"
                     placeholder="you@example.com"
                     autoComplete="email"
@@ -246,6 +223,7 @@ export default function RegisterPage() {
                     disabled={loading}
                   />
                 </span>
+                {fieldErrors.email && <span id="email-error" className="auth-field-error" role="alert">{fieldErrors.email}</span>}
               </label>
 
               {/* Password */}
@@ -257,6 +235,9 @@ export default function RegisterPage() {
 
                   <input
                     type={showPassword ? "text" : "password"}
+                    aria-label="Password"
+                    aria-invalid={Boolean(fieldErrors.password)}
+                    aria-describedby={fieldErrors.password ? "password-error" : undefined}
                     name="password"
                     placeholder="Create a strong password"
                     autoComplete="new-password"
@@ -285,6 +266,7 @@ export default function RegisterPage() {
                     )}
                   </button>
                 </span>
+                {fieldErrors.password && <span id="password-error" className="auth-field-error" role="alert">{fieldErrors.password}</span>}
               </label>
 
               {/* Confirm Password */}
@@ -296,6 +278,9 @@ export default function RegisterPage() {
 
                   <input
                     type={showPassword ? "text" : "password"}
+                    aria-label="Confirm Password"
+                    aria-invalid={Boolean(fieldErrors.confirmPassword)}
+                    aria-describedby={fieldErrors.confirmPassword ? "confirmPassword-error" : undefined}
                     name="confirmPassword"
                     placeholder="Confirm password"
                     autoComplete="new-password"
@@ -305,7 +290,10 @@ export default function RegisterPage() {
                     disabled={loading}
                   />
                 </span>
+                {fieldErrors.confirmPassword && <span id="confirmPassword-error" className="auth-field-error" role="alert">{fieldErrors.confirmPassword}</span>}
               </label>
+
+              {feedback && <div className="auth-feedback" role="alert">{feedback}</div>}
 
               <button
                 type="submit"
@@ -351,17 +339,6 @@ export default function RegisterPage() {
                 </div>
               )}
             </div>
-
-            {/* Error Messages */}
-            {feedback && (
-              <div
-                className="auth-feedback"
-                role="alert"
-                style={{ marginTop: 14 }}
-              >
-                {feedback}
-              </div>
-            )}
 
             <p className="auth-switch">
               Already have an account?{" "}

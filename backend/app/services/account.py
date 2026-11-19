@@ -22,6 +22,8 @@ def owned_account(
         Account.id == account_id,
         Account.family_id.is_(None),
         Account.user_id == user.id,
+        # Savings reserves are managed exclusively by the goal transfer ledger.
+        Account.kind != "goal_savings",
     )
 
     if lock:

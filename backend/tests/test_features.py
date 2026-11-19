@@ -26,8 +26,9 @@ class FeatureTests(FamilyTests):
             ids.append(response.json()['id'])
         self.assertEqual(self.post('/goals', payload).status_code, 403)
         self.assertEqual(self.post(f'/goals/{ids[0]}/contribute', {"amount": "10"}, self.other).status_code, 404)
-        self.assertEqual(self.post(f'/goals/{ids[0]}/contribute', {"amount": "100"}).json()['status'], 'completed')
-        self.assertEqual(self.post(f'/goals/{ids[0]}/contribute', {"amount": "1"}).status_code, 409)
+        account = self.post('/accounts', {"name": "Cash", "kind": "cash", "opening_balance": "100"}).json()['id']
+        self.assertEqual(self.post(f'/goals/{ids[0]}/contribute', {"amount": "100", "account_id": account, "request_id": "complete-goal"}).json()['status'], 'completed')
+        self.assertEqual(self.post(f'/goals/{ids[0]}/contribute', {"amount": "1", "account_id": account, "request_id": "completed-again"}).status_code, 409)
         self.assertEqual(self.post('/goals', payload).status_code, 201)
 
     def test_reminder_payment_is_idempotent_and_isolated(self):

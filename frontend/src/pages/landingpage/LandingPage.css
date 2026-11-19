@@ -375,7 +375,8 @@
     box-shadow 0.3s ease;
 }
 
-.landing-page .showcase-card:hover {
+.landing-page .showcase-card:hover,
+.landing-page .showcase-card:focus-within {
   transform: translateY(-5px);
   box-shadow: 0 21px 40px rgba(32, 52, 58, 0.11);
 }
@@ -1588,3 +1589,18 @@
 
 /* Cards 3 and 6 only: one continuous yellow cream surface. */
 .landing-page .showcase-card.tone-cream { background: #F6E7B5; border: 1px solid rgba(255, 255, 255, 0.85); }
+
+/* Feature interactions stay scoped away from the landing hero. */
+.landing-page .showcase-explore { position: absolute; top: 22px; right: 20px; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: #24484a; background: #fffdf778; transition: transform .2s, background .2s; }
+.landing-page .showcase-copy { padding-right: 48px; }
+.landing-page .showcase-card:is(:hover, :focus-within) .showcase-explore { transform: translateX(3px); background: #fffdf7; }
+.landing-page .showcase-explore:focus-visible { outline: 2px solid #36787a; outline-offset: 4px; }
+.landing-page .footer-content { display: grid; grid-template-columns: 1.3fr repeat(3, 1fr); gap: 30px; align-items: start; }
+.landing-page .footer-brand img { display: block; object-fit: contain; }
+.landing-page .footer-group h3 { margin: 12px 0; font-size: 14px; color: #24484a; }
+.landing-page .footer-group ul { margin: 0; padding-left: 16px; color: #587173; font-size: 12px; line-height: 1.8; }
+.landing-page .footer-group li + li { margin-top: 5px; }
+.landing-page .footer-copyright { grid-column: 1 / -1; margin: 0; padding-top: 18px; border-top: 1px solid #58717326; }
+@media (max-width: 760px) { .landing-page .footer-content { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; } }
+@media (max-width: 440px) { .landing-page .footer-content { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .landing-page .showcase-card, .landing-page .showcase-explore { animation: none; transition: none; } .landing-page .showcase-card:is(:hover, :focus-within), .landing-page .showcase-card:is(:hover, :focus-within) .showcase-explore { transform: none; } }

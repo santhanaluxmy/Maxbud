@@ -1,7 +1,7 @@
-"""Personal allocations and shared goals; neither creates income or transfers."""
+"""Personal savings transfers and the existing shared-goal allocation ledger."""
 from decimal import Decimal
 from typing import Literal
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -14,6 +14,7 @@ from app.models.user import User
 from app.schemas.onboarding import GoalItem
 from app.services.family import family_plan, get_family
 from app.services.goals import shared_family, shared_goal, shared_details, shared_balance, require_shared_currency
+from app.services import personal_savings
 
 router = APIRouter(prefix="/goals", tags=["Goals"])
 
@@ -48,11 +49,15 @@ def check_limit(db, user, additional=1):
         raise HTTPException(403, "Active goal limit reached. Archive a goal or upgrade your plan.")
 
 
-def serialize(goal, db=None):
+def serialize(goal, db=None, *, lock=True):
     if goal.family_id is not None:
         return shared_details(db, goal, lock=True)
+    backed = personal_savings.backed_amount(db, goal, lock=lock)
     return {"id": goal.id, "name": goal.name, "target_amount": str(goal.target_amount),
             "saved_amount": str(goal.saved_amount), "target_date": goal.target_date,
+            "account_backed_amount": str(backed),
+            "legacy_allocated_amount": str(goal.saved_amount - backed),
+            "has_transfer_history": personal_savings.has_backed_history(db, goal, lock=lock),
             "status": goal.status, "progress": float(min(Decimal(100), goal.saved_amount / goal.target_amount * 100))}
 
 
@@ -63,7 +68,13 @@ def listing(scope: Literal["me", "family"] = "me", user: User = Depends(current_
         goals = db.scalars(select(Goal).where(Goal.family_id == family.id).order_by(Goal.id.desc()).with_for_update()).all()
     else:
         goals = db.scalars(select(Goal).where(Goal.user_id == user.id, Goal.family_id.is_(None)).order_by(Goal.id.desc())).all()
-    return [serialize(goal, db) for goal in goals]
+    return [serialize(goal, db, lock=False) for goal in goals]
+
+
+@router.get("/transfers")
+def transfer_history(limit: int = Query(100, ge=1, le=100), offset: int = Query(0, ge=0),
+                     user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return personal_savings.history(db, user, limit, offset)
 
 
 @router.post("", status_code=201)
@@ -97,6 +108,9 @@ def create(data: GoalItem, scope: Literal["me", "family"] = "me", user: User = D
 @router.put("/{goal_id}")
 def update(goal_id: int, data: GoalItem, user: User = Depends(current_user), db: Session = Depends(get_db)):
     goal = owned(db, user, goal_id)
+    if (goal.family_id is None and personal_savings.has_backed_history(db, goal)
+            and data.saved_amount != goal.saved_amount):
+        raise HTTPException(422, "Saved amount is controlled by savings transfers; contribute or reverse a transfer instead")
     if goal.family_id is not None:
         data.name = data.name.strip()
         if not data.name:
@@ -123,6 +137,7 @@ class Contribution(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     amount: Decimal = Field(gt=0, max_digits=12, decimal_places=2)
     request_id: str | None = Field(default=None, min_length=1, max_length=36)
+    account_id: int | None = Field(default=None, gt=0)
 
 
 @router.post("/{goal_id}/contribute")
@@ -165,33 +180,29 @@ def record_contribution(db, user, goal_id, data):
         db.flush()
     else:
         goal = owned(db, user, goal_id)
-        # The user/goal locks serialize personal contributions. Keep historical
-        # saved_amount as the baseline; only new contributions enter the ledger.
-        if data.request_id:
-            previous = db.scalar(select(GoalContribution).where(
-                GoalContribution.user_id == user.id,
-                GoalContribution.request_id == data.request_id,
-            ).with_for_update())
-            if previous:
-                if previous.current_goal_id != goal.id or previous.amount != data.amount:
-                    raise HTTPException(409, "Contribution request_id was already used with different details")
-                return serialize(goal, db)
-        if goal.status != "active":
-            raise HTTPException(409, "Only active goals accept contributions")
-        if goal.saved_amount + data.amount > goal.target_amount:
-            raise HTTPException(422, "Contribution exceeds the remaining goal amount")
-        db.add(GoalContribution(
-            current_goal_id=goal.id,
-            user_id=user.id,
-            request_id=data.request_id,
-            amount=data.amount,
-        ))
-        goal.saved_amount += data.amount
-        if goal.saved_amount == goal.target_amount:
-            goal.status = "completed"
+        personal_savings.contribute(db, user, goal, data)
     result = serialize(goal, db)
     db.commit()
     return result
+
+
+@router.post("/{goal_id}/contributions/{contribution_id}/reverse")
+def reverse_contribution(goal_id: int, contribution_id: int,
+                         user: User = Depends(current_user), db: Session = Depends(get_db)):
+    try:
+        goal = owned(db, user, goal_id)
+        if goal.family_id is not None:
+            raise HTTPException(404, "Personal savings transfer not found")
+        personal_savings.reverse(db, user, goal, contribution_id)
+        result = serialize(goal, db)
+        db.commit()
+        return result
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, "This savings transfer has already been reversed") from None
+    except Exception:
+        db.rollback()
+        raise
 
 
 class StatusChange(BaseModel):

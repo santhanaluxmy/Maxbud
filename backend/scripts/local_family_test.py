@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.core.config import get_settings
 
 OWNER_EMAIL = 'family-owner@maxbud.example.com'
-MEMBER_EMAILS = [f'roommate{i}@maxbud.example.com' for i in range(1, 6)]
+MEMBER_EMAILS = [f'roommate{i}@maxbud.example.com' for i in range(1, 5)]
 ROOT = Path(__file__).resolve().parents[1] / '.local-family-test'
 APPLICATION_ID = 0x4D425446
 LABEL = 'MAXBUD LOCAL FAMILY TEST ONLY'
@@ -205,7 +205,7 @@ class Sandbox:
         # from the normal app. No .env or production setting is written.
         self.settings.JWT_SECRET = marker['jwt_secret']
         self.settings.DEMO_PAYMENTS_ENABLED = False
-        self.settings.FAMILY_PACK_MEMBER_LIMIT = 6
+        self.settings.FAMILY_PACK_MEMBER_LIMIT = 5
         self.settings.GOOGLE_CLIENT_ID = ''
         self.settings.GROQ_API_KEY = ''; self.settings.OPENAI_API_KEY = ''
         self.settings.RECEIPT_STORAGE_DIR = str(self.root / 'receipts')
@@ -227,7 +227,7 @@ def private_terminal():
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='action', required=True)
-    init = commands.add_parser('init', help='Create six NEW synthetic accounts in a new isolated SQLite database')
+    init = commands.add_parser('init', help='Create five NEW synthetic accounts in a new isolated SQLite database')
     init.add_argument('--apply', action='store_true')
     commands.add_parser('status', help='Inspect the designated local test entitlement')
     serve = commands.add_parser('serve', help='Serve only the isolated database on loopback, with its own signing key')
@@ -243,12 +243,12 @@ def main(argv=None):
         sandbox = Sandbox(ROOT, load_settings())
         if args.action == 'init':
             if not args.apply:
-                print(f'Preview only: create a NEW isolated database at {ROOT}; owner {OWNER_EMAIL} and five synthetic members. Add --apply to confirm. MySQL will not be opened.')
+                print(f'Preview only: create a NEW isolated database at {ROOT}; owner {OWNER_EMAIL} and four synthetic members. Add --apply to confirm. MySQL will not be opened.')
                 return
             private_terminal()
             if input('Type CREATE LOCAL TEST DATABASE to continue: ') != 'CREATE LOCAL TEST DATABASE':
                 raise LocalTestError('Initialization canceled; no changes made.')
-            password = getpass('New test-only password for the six synthetic accounts: ')
+            password = getpass('New test-only password for the five synthetic accounts: ')
             if password != getpass('Confirm test-only password: '):
                 raise LocalTestError('Passwords did not match; no changes made.')
             print(json.dumps(sandbox.initialize(password), indent=2))

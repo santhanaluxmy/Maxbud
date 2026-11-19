@@ -83,7 +83,7 @@ def run():
                             assert saved.ok, (step, saved.status)
                         person = request.post(WEB + '/api/auth/login', data={'email': email, 'password': PASSWORD}).json()
                         people.append(person)
-                    print('PASS: six synthetic users onboard through the real API; sandbox JWT cannot authenticate against the normal signing key', flush=True)
+                    print('PASS: five synthetic users onboard through the real API; sandbox JWT cannot authenticate against the normal signing key', flush=True)
                     browser = pw.chromium.launch(executable_path='/usr/bin/google-chrome', headless=True, args=['--no-sandbox'], timeout=60000)
                     print('PASS: isolated browser launched', flush=True)
                     contexts = []
@@ -119,7 +119,7 @@ def run():
                         member_pages.append(member)
                     owner.reload(wait_until='domcontentloaded')
                     expect(owner.get_by_role('button', name='Create secure invitation', exact=True)).to_be_disabled()
-                    print('PASS: owner invites all five, each accepts and sees TEST ACCESS; seventh seat is unavailable', flush=True)
+                    print('PASS: owner invites all four, each accepts and sees TEST ACCESS; sixth seat is unavailable', flush=True)
                     headers = {'Authorization': 'Bearer ' + people[0]['access_token']}
                     state = request.get(WEB + '/api/subscriptions', headers=headers).json()
                     assert state['test_access'] and not state['catalog']['demo_enabled']
@@ -142,7 +142,7 @@ def run():
                     expect(owner.get_by_role('cell', name='Common', exact=True)).to_be_visible()
                     expect(owner.get_by_role('button', name='Add shared income', exact=True)).to_be_disabled()
                     assert not errors, errors
-                    print('PASS: CLI-service revocation blocks existing tokens for all six users, preserves history, and locks shared controls; demo remains off', flush=True)
+                    print('PASS: CLI-service revocation blocks existing tokens for all five users, preserves history, and locks shared controls; demo remains off', flush=True)
                     for context in contexts:
                         context.close()
                     browser.close()

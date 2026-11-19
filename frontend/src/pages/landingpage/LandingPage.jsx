@@ -10,7 +10,6 @@ import {
   PiggyBank,
   ReceiptText,
   ScanLine,
-  ShieldCheck,
   Sparkles,
   TrendingUp,
   Users,
@@ -304,6 +303,7 @@ function FeatureCard({ feature, index }) {
       </div>
 
       <div className="feature-art-frame"><FeatureVisual index={index} /></div>
+      <Link className="showcase-explore" to="/register" aria-label={`Explore ${feature.title}`}><ArrowRight size={19}/></Link>
     </article>
   );
 }
@@ -547,9 +547,9 @@ export default function LandingPage() {
             <h3>{plan.name}</h3><div className="plan-price">{plan.id === "trial" ? "LKR 0" : plan.prices.monthly === null ? "Configurable pricing" : `LKR ${Number(plan.prices.monthly).toLocaleString("en-LK")}`}<small>{plan.id === "trial" ? " / 3 calendar months" : " / month"}</small></div>
             {plan.id !== "trial" && <p>Yearly: {plan.prices.yearly === null ? "Price not configured" : `LKR ${Number(plan.prices.yearly).toLocaleString("en-LK")}`}</p>}
             <ul className="plan-benefit-list"><PlanFeature>Accounts, income, expenses and budgets</PlanFeature><PlanFeature>Savings goals, reminders and personal reports</PlanFeature><PlanFeature>{plan.limits.receipt_scans} receipt scans per month</PlanFeature><PlanFeature>{plan.limits.advisor_messages} advisor messages per month</PlanFeature>{plan.id === "family_pack" ? <><PlanFeature>{plan.limits.family_members} total household users</PlanFeature><PlanFeature>Shared wallets, goals, budgets and expense splits</PlanFeature><PlanFeature>Individual AI allowances for sponsored members</PlanFeature></> : <PlanFeature>For one person; household management not included</PlanFeature>}</ul>
-            <Link to="/register" className={`max-btn ${plan.id === "trial" ? "aqua" : "pink"} plan-action`} onClick={() => { if (plan.id !== "trial") sessionStorage.setItem("maxbud_plan_interest", plan.id); }}>{plan.id === "trial" ? "Start Free Trial" : "Explore demo plans"}<ArrowRight size={17}/></Link>
+            <Link to="/register" className={`max-btn ${plan.id === "trial" ? "aqua" : "pink"} plan-action`} onClick={() => { if (plan.id !== "trial") sessionStorage.setItem("maxbud_plan_interest", plan.id); }}>{plan.id === "trial" ? "Start Free Trial" : "Explore plans"}<ArrowRight size={17}/></Link>
           </article>)}</div>
-          <p className="plans-disclaimer">Demo Payment — No real money will be charged. Prices are configurable, not final production prices. New registrations receive a three-calendar-month personal trial. After expiry, history and export remain available; new financial editing requires eligible access.</p>
+
         </section>
 
         {/* =================================
@@ -612,26 +612,11 @@ export default function LandingPage() {
 
       <footer className="max-footer">
         <div className="site-container footer-content">
-          <div>
-            <img
-              src={logo}
-              alt="MaxBud"
-            />
-
-            <p>
-              Smarter budgeting for everyday life.
-            </p>
-          </div>
-
-          <p>
-            © {new Date().getFullYear()} MaxBud ·
-            Personal & Family Budgeting
-          </p>
-
-          <span>
-            <ShieldCheck size={16} />
-            No Bank Integration Required
-          </span>
+          <div className="footer-brand"><img src={logo} alt="MaxBud"/><p>Smarter budgeting for everyday life.</p></div>
+          <div className="footer-group"><h3>Personal finance</h3><ul><li>Accounts & transactions</li><li>Budgets & savings goals</li><li>Payment reminders</li></ul></div>
+          <div className="footer-group"><h3>Plan together</h3><ul><li>Shared wallets & expenses</li><li>Family budgets & goals</li><li>Household reports</li></ul></div>
+          <div className="footer-group"><h3>Smart tools</h3><ul><li>AI Money Advisor</li><li>AI Receipt Scanner</li><li>No bank integration required</li></ul></div>
+          <p className="footer-copyright">© {new Date().getFullYear()} MaxBud · Personal & Family Budgeting</p>
         </div>
       </footer>
     </div>

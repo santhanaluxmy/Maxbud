@@ -82,3 +82,84 @@ test('wrong password returns the backend error and leaves no previous session', 
   assert.equal(localStorage.getItem('maxbud_auth'), null);
   assert.equal(sessionStorage.getItem('maxbud_auth'), null);
 });
+
+async function withLoginClock(check) {
+  const originalSetTimeout = globalThis.setTimeout;
+  const originalClearTimeout = globalThis.clearTimeout;
+  let expire;
+  let cleared = false;
+  globalThis.setTimeout = (callback, milliseconds) => {
+    assert.equal(milliseconds, 15000);
+    expire = callback;
+    return 123;
+  };
+  globalThis.clearTimeout = timer => { assert.equal(timer, 123); cleared = true; };
+  try { await check({ expire: () => expire(), cleared: () => cleared }); }
+  finally { globalThis.setTimeout = originalSetTimeout; globalThis.clearTimeout = originalClearTimeout; }
+}
+
+test('a stalled sign-in fails promptly, aborts the request and leaves no session', async () => {
+  const { loginUser, saveAuthSession, getAuthSession } = await import('../src/services/authApi.js');
+  saveAuthSession(result, true);
+  let signal;
+  globalThis.fetch = (_url, options) => new Promise((_resolve, reject) => {
+    signal = options.signal;
+    signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+  });
+  await withLoginClock(async clock => {
+    const pending = loginUser({ email: 'test@example.com', password: 'ExamplePassword123!' });
+    clock.expire();
+    await assert.rejects(pending, /Sign-in timed out/);
+    assert.equal(signal.aborted, true);
+    assert.equal(clock.cleared(), true);
+    assert.equal(getAuthSession(), null);
+  });
+});
+
+test('the deadline also covers a stalled JSON body after successful response headers', async () => {
+  const { loginUser } = await import('../src/services/authApi.js');
+  let readingBody = false;
+  globalThis.fetch = async () => ({ ok: true, json() { readingBody = true; return new Promise(() => {}); } });
+  await withLoginClock(async clock => {
+    const pending = loginUser({ email: 'test@example.com', password: 'ExamplePassword123!' });
+    await Promise.resolve();
+    assert.equal(readingBody, true);
+    clock.expire();
+    await assert.rejects(pending, /Sign-in timed out/);
+    assert.equal(clock.cleared(), true);
+  });
+});
+
+test('Google sign-in also times out rather than leaving the empty login form busy', async () => {
+  const { googleLogin } = await import('../src/services/authApi.js');
+  let signal;
+  globalThis.fetch = (url, options) => {
+    assert.equal(url, '/api/auth/google');
+    signal = options.signal;
+    return new Promise(() => {});
+  };
+  await withLoginClock(async clock => {
+    const pending = googleLogin('synthetic-google-id-token');
+    clock.expire();
+    await assert.rejects(pending, /Sign-in timed out/);
+    assert.equal(signal.aborted, true);
+    assert.equal(clock.cleared(), true);
+  });
+});
+
+test('a successful sign-in clears its deadline and permits another login after logout', async () => {
+  const { loginUser, saveAuthSession, getAuthSession } = await import('../src/services/authApi.js');
+  globalThis.fetch = async () => Response.json(result);
+  await withLoginClock(async clock => {
+    const response = await loginUser({ email: 'test@example.com', password: 'ExamplePassword123!' });
+    assert.equal(clock.cleared(), true);
+    saveAuthSession(response);
+    assert.equal(getAuthSession().token, result.access_token);
+  });
+  logout();
+  assert.equal(getAuthSession(), null);
+  await withLoginClock(async clock => {
+    assert.equal((await loginUser({ email: 'test@example.com', password: 'ExamplePassword123!' })).access_token, result.access_token);
+    assert.equal(clock.cleared(), true);
+  });
+});

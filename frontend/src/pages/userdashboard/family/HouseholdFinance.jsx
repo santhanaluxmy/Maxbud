@@ -59,7 +59,7 @@ export default function HouseholdFinance({ family, section = "overview" }) {
   return <>
     {notice && <p className="family-feedback" role="status">{notice}</p>}
     {error && !modal && <p className="family-feedback" role="alert">{error} <button className="db-outline-btn" onClick={() => setRevision(value => value + 1)}>Retry shared data</button></p>}
-    {!canEdit && <p className="db-warning">Shared history is available. Shared editing requires an active Family Pack, no more than six household users, and permission from the owner.</p>}
+    {!canEdit && <p className="db-warning">Shared history is available. Shared editing requires an active Family Pack, no more than five household users, and permission from the owner.</p>}
     {!data ? <p role="status">{error ? "Shared data could not load." : "Loading shared finances…"}</p> : <>
       {["overview", "reports"].includes(section) && <GlassCard title="Household this month" subtitle="Only explicitly shared income and expenses; private accounts stay private.">
         <dl className="family-overview">{[["Shared income", data.report.monthly_income], ["Shared expenses", data.report.monthly_expenses], ["Income minus expenses", data.report.monthly_net_cash_flow], ["Shared wallet balance", data.report.total_balance]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{money(value)}</dd></div>)}</dl>

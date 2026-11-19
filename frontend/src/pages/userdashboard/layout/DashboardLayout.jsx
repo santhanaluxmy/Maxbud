@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { ChevronDown, LogOut, Menu, Bell, Search, X } from "lucide-react";
+import { ChevronDown, LogOut, Menu, Bell, X } from "lucide-react";
 import { api, logout } from "../../../api/client";
 import { getAuthSession } from "../../../services/authApi";
 import logo from "../../../assets/images/maxbud-logo.png";
@@ -22,12 +22,9 @@ export default function DashboardLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const drawerRef = useRef(null);
   const [collapsed, setCollapsed] = useState(false);
-  const [search, setSearch] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
   const person = getAuthSession()?.user || {};
   const firstName = person.full_name?.trim().split(" ")[0] || "there";
   const pageTitle = navigation.find((item) => dashboardPath(item.id) === pathname.replace(/\/$/, ""))?.label || (pathname.startsWith("/dashboard/family/") ? "Shared Household" : "Overview");
-  const results = navigation.filter((item) => `${item.label} ${item.id}`.toLowerCase().includes(search.trim().toLowerCase()));
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -54,8 +51,6 @@ export default function DashboardLayout() {
   function goTo(path) {
     navigate(path);
     setMenuOpen(false);
-    setSearchOpen(false);
-    setSearch("");
   }
   function signOut() { logout(); navigate("/login", { replace: true }); }
   function toggleNavigation() {
@@ -85,11 +80,7 @@ export default function DashboardLayout() {
     <div className="db-workspace">
       <header className="db-topbar" aria-label={`${pageTitle} navigation`}>
         <button type="button" aria-label="Toggle navigation" aria-controls="dashboard-navigation" aria-expanded={window.matchMedia("(max-width: 990px)").matches ? menuOpen : !collapsed} className="db-hamburger" onClick={toggleNavigation}><Menu size={23}/></button>
-        <form className="db-search" role="search" onSubmit={(event) => { event.preventDefault(); if (results[0]) goTo(dashboardPath(results[0].id)); }} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setSearchOpen(false); }}>
-          <Search size={20} aria-hidden="true"/>
-          <input type="search" aria-label="Search dashboard pages" placeholder="Search transactions, accounts, budgets…" value={search} onChange={(event) => { setSearch(event.target.value); setSearchOpen(true); }} onFocus={() => setSearchOpen(true)} onKeyDown={(event) => { if (event.key === "Escape") setSearchOpen(false); }} aria-expanded={searchOpen} aria-controls="dashboard-search-results"/>
-          {searchOpen && <nav id="dashboard-search-results" className="db-search-results" aria-label="Matching dashboard pages"><small>GO TO A PAGE</small>{results.length ? results.map((item) => <Link key={item.id} to={dashboardPath(item.id)} onClick={() => { setSearchOpen(false); setSearch(""); setMenuOpen(false); }}>{item.label}</Link>) : <p>No matching pages found.</p>}</nav>}
-        </form>
+        <span className="db-topbar-title">{pageTitle}</span>
         <div className="db-topbar-right">
           <button type="button" className="db-bell" aria-label="Open notifications" title={`Notifications (${unread} unread)`} onClick={() => goTo("/dashboard/notifications")}><Bell size={22}/>{unread > 0 && <span className="db-notification-count">{unread}</span>}</button>
           <details className="db-profile">

@@ -1,9 +1,10 @@
 
 from datetime import datetime, timezone
+from functools import partial
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException
-from google.auth.exceptions import GoogleAuthError
+from google.auth.exceptions import GoogleAuthError, TransportError
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from sqlalchemy import func, inspect, select, text
@@ -37,11 +38,21 @@ router = APIRouter(
 
 def auth_result(user: User, db: Session) -> dict:
     from app.core.security import session_version
+    from app.models.family import Family, FamilyMembership
+    from sqlalchemy import or_
+    memberships = select(FamilyMembership.family_id).where(
+        FamilyMembership.user_id == user.id, FamilyMembership.status == 'active',
+    )
+    has_household = db.scalar(select(Family.id).where(
+        Family.is_active.is_(True),
+        or_(Family.owner_user_id == user.id, Family.id.in_(memberships)),
+    ).limit(1)) is not None
     return {
         "access_token": make_token(user.id, session_version(db, user.id)),
         "token_type": "bearer",
         "user": user,
         "onboarding_completed": user.onboarding_completed,
+        "has_household": has_household,
     }
 
 
@@ -324,9 +335,17 @@ def google_login(
     try:
         payload = id_token.verify_oauth2_token(
             data.credential,
-            Request(),
+            # google-auth otherwise waits up to 120 seconds for certificates,
+            # keeping the login page in its pending state during network stalls.
+            partial(Request(), timeout=10),
             client_id,
         )
+
+    except TransportError:
+        raise HTTPException(
+            status_code=503,
+            detail="Google sign-in is temporarily unavailable. Please try again.",
+        ) from None
 
     except (ValueError, GoogleAuthError):
         raise HTTPException(

@@ -179,19 +179,7 @@
     rgba(71, 125, 126, 0.08);
 }
 
-/* MaxBud logo */
-
-.auth-page:has(.auth-switch a[href="/login"])
-.auth-logo {
-  display: block;
-
-  width: 150px;
-  height: 70px;
-
-  object-fit: contain;
-
-  margin-bottom: 5px;
-}
+/* Logo proportions are defined in the shared authentication stylesheet. */
 
 /* Register title */
 
@@ -608,6 +596,3 @@ input:-webkit-autofill:focus {
 }
 
 /* Shared, content-aligned MaxBud branding; form structure stays unchanged. */
-.auth-page .auth-card > .auth-brand { position: relative; display: block; align-self: center; width: 164px; height: 90px; margin: 0 auto 8px; overflow: hidden; flex-shrink: 0; }
-.auth-page .auth-brand .auth-logo { position: absolute; width: 164px; height: 164px; max-width: none; top: 50%; left: 50%; transform: translate(-50%, -50%); object-fit: contain; }
-.auth-page .auth-brand:focus-visible { outline: 2px solid #36787a; outline-offset: 3px; border-radius: 10px; }

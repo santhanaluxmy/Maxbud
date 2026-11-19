@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     GROQ_VISION_MODEL: str = ""
     GROQ_CHAT_MODEL: str = ""
     DEMO_PAYMENTS_ENABLED: bool = False
-    FAMILY_PACK_MEMBER_LIMIT: int = 6
+    FAMILY_PACK_MEMBER_LIMIT: int = 5
     PLAN_PRICES_JSON: str = '{"premium_individual":{"monthly":null,"yearly":null},"family_pack":{"monthly":null,"yearly":null}}'
 
     OPENAI_API_KEY: str = ""
@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     STRIPE_PRICE_FAMILY_YEARLY: str = ""
     STRIPE_PORTAL_CONFIGURATION: str = ""
     FRONTEND_ORIGIN: str = "http://localhost:5173"
+    PUBLIC_FRONTEND_URL: str = ""
 
     model_config = SettingsConfigDict(
         env_file=ENV_FILE,

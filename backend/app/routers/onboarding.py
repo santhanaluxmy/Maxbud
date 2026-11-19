@@ -102,7 +102,9 @@ def accounts(
     user: User = Depends(writable_user),
     db: Session = Depends(get_db),
 ):
-    require_step(user, 3, db)
+    # Step 2 now leads directly to accounts. Accept legacy step 3 as well
+    # so unfinished setups and the existing income endpoint remain compatible.
+    require_step(user, 2 if user.onboarding_step == 2 else 3, db)
 
     for item in data.accounts:
         db.add(

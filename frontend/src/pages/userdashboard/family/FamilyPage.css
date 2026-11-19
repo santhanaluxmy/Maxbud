@@ -1,8 +1,4 @@
 .family-page { display: grid; gap: 22px; }
-.family-section-nav { display: flex; flex-wrap: wrap; gap: 8px; }
-.family-section-nav a { padding: 10px 14px; border: 1px solid #b1e5e6; border-radius: 12px; color: inherit; text-decoration: none; font-size: .85rem; }
-.family-section-nav a.active { background: #b1e5e6; font-weight: 600; }
-.family-section-nav a:focus-visible { outline: 2px solid #448e88; outline-offset: 3px; }
 .family-task-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 18px; }
 .family-form select { width: 100%; padding: 12px; border: 1px solid #b1e5e6; border-radius: 12px; background: #fffdf7; color: inherit; font: inherit; }
 .family-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
@@ -59,3 +55,148 @@
 .family-page > .db-note { display: block; overflow-wrap: anywhere; }
 .family-page .db-panel-heading { flex-wrap: wrap; gap: 12px; }
 .family-page .db-panel-heading > div { min-width: 0; }
+
+/* Membership and invitations: existing cream, aqua and blush palette. */
+.family-invitations { display: grid; gap: 22px; min-width: 0; }
+.family-invitations .family-invite-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 14px; max-width: none; }
+.family-invite-form > button, .family-invite-copy > button { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 46px; }
+.family-invite-help { color: #587173; font-size: .86rem; line-height: 1.65; margin-top: 14px; }
+.family-invite-warning { background: #f7adad30; border: 1px solid #d58f8f70; border-radius: 14px; padding: 15px; line-height: 1.65; overflow-wrap: anywhere; }
+.family-invite-delivery { display: flex; align-items: flex-start; gap: 10px; padding: 15px; margin: 18px 0 0; background: #eeead7; border: 1px solid #d6ccb1; border-radius: 14px; font-size: .9rem; line-height: 1.65; }
+.family-invite-delivery > svg { flex-shrink: 0; margin-top: 3px; }
+.family-invite-delivery.submitted { background: #b1e5e630; border-color: #80bfc0; }
+.family-created-invite { margin-top: 18px; padding: 20px; background: #b1e5e61c; border: 1px solid #b1e5e6; border-radius: 18px; min-width: 0; }
+.family-created-heading { display: flex; gap: 9px; align-items: center; }
+.family-created-heading h3 { margin: 0; font-size: 1rem; }
+.family-created-invite > p { font-size: .85rem; line-height: 1.7; overflow-wrap: anywhere; }
+.family-invitation-url { width: 100%; box-sizing: border-box; margin: 15px 0; padding: 16px; border: 1px solid #8cc4c6; border-radius: 12px; background: #fffdf7; color: #174b50; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .85rem; line-height: 1.8; overflow-wrap: anywhere; word-break: break-word; user-select: all; }
+.family-invitation-url:focus-visible { outline: 2px solid #36787a; outline-offset: 3px; }
+.family-invite-copy { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.family-invite-copy [role=status] { color: #24575b; font-size: .85rem; }
+.family-created-invite .family-invite-local { padding: 13px; border-left: 3px solid #d6ccb1; background: #eeead770; }
+.family-invite-steps { padding-left: 22px; font-size: .86rem; line-height: 1.8; color: #466568; }
+.family-invite-steps li + li { margin-top: 5px; }
+.family-invite-empty { padding: 25px 10px; text-align: center; color: #587173; }
+.family-invite-empty p { margin: 10px 0 6px; font-weight: 600; color: #174b50; }
+.family-invite-empty small { line-height: 1.6; }
+.family-invite-table-wrap { min-width: 0; }
+.family-invite-table { width: 100%; border-collapse: collapse; text-align: left; table-layout: fixed; }
+.family-invite-table th { font-size: .75rem; color: #587173; padding: 14px 10px; font-weight: 600; }
+.family-invite-table td { padding: 16px 10px; border-top: 1px solid #b1e5e680; font-size: .82rem; vertical-align: top; overflow-wrap: anywhere; }
+.family-invite-table th:first-child { width: 32%; }
+.family-invite-table th:last-child { width: 17%; }
+.family-invite-table small { display: block; margin-top: 7px; color: #587173; line-height: 1.6; }
+.family-invite-badge { display: inline-block; border: 1px solid #d6ccb1; background: #eeead780; color: #495b58; border-radius: 20px; font-size: .73rem; padding: 5px 10px; line-height: 1.4; }
+.family-invite-badge.pending { background: #eeead7; border-color: #c9bc93; color: #635123; }
+.family-invite-badge.accepted { background: #b1e5e645; border-color: #8bc6c5; color: #225e5d; }
+.family-invite-badge.revoked { background: #f7adad38; border-color: #d9a4a4; color: #794141; }
+.family-invite-history { padding: 18px 20px; border: 1px solid #d6ccb1; border-radius: 16px; background: #fffdf75c; min-width: 0; }
+.family-invite-history > summary { cursor: pointer; font-size: .9rem; font-weight: 600; }
+.family-invite-history > p { font-size: .82rem; color: #587173; }
+.family-members-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+.family-member-card { display: flex; align-items: center; justify-content: space-between; gap: 22px; padding: 18px; border: 1px solid #b1e5e680; border-radius: 16px; background: #fffdf76b; min-width: 0; }
+.family-member-identity { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+.family-member-avatar { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; background: #b1e5e650; flex-shrink: 0; }
+.family-member-identity h3 { margin: 0; font-size: .95rem; overflow-wrap: anywhere; }
+.family-member-identity p { margin: 5px 0 9px; color: #587173; font-size: .82rem; overflow-wrap: anywhere; }
+.family-member-labels { display: flex; align-items: center; gap: 10px; font-size: .76rem; }
+.family-member-controls { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 18px; }
+.family-member-controls fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
+.family-member-controls legend { font-size: .72rem; color: #587173; padding: 0 0 9px; }
+.family-member-controls label { display: flex; align-items: center; gap: 8px; font-size: .78rem; }
+.family-member-controls input { accent-color: #36787a; width: 16px; height: 16px; }
+.family-close-section { padding: 20px; border: 1px solid #d9a4a470; border-radius: 16px; background: #f7adad12; }
+.family-close-section h2 { font-size: .95rem; margin: 0; }
+.family-close-section p { max-width: 720px; color: #587173; line-height: 1.7; font-size: .85rem; }
+.family-confirm-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: #143f4566; backdrop-filter: blur(5px); }
+.family-confirm-dialog { width: min(100%, 520px); max-height: 85dvh; overflow-y: auto; padding: 25px; border: 1px solid #b1e5e6; border-radius: 22px; background: #fffdf7; box-shadow: 0 20px 70px #174b5026; color: #174b50; box-sizing: border-box; }
+.family-confirm-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.family-confirm-heading h2 { font-size: 1.15rem; margin: 0; }
+.family-confirm-heading > button { display: grid; place-items: center; padding: 9px; }
+.family-danger-button { background: #f7adad80; border-color: #ce9999; }
+.family-invitation-page { min-height: 100dvh; padding: 50px 20px; display: grid; place-items: start center; background: #eeead7; color: #174b50; box-sizing: border-box; }
+.family-invitation-card { width: min(100%, 620px); padding: 34px; border: 1px solid #b1e5e6; border-radius: 26px; background: #fffdf7; box-shadow: 0 16px 60px #174b5012; box-sizing: border-box; overflow-wrap: anywhere; }
+.family-invitation-card > h1 { margin: 16px 0 24px; font-size: 1.8rem; }
+.family-invitation-card a { color: inherit; }
+.family-invite-brand { font-weight: 700; text-decoration: none; font-size: 1.3rem; }
+.family-invite-symbol { display: grid; place-items: center; width: 52px; height: 52px; margin-top: 24px; background: #b1e5e650; border-radius: 18px; }
+.family-invite-summary { padding: 20px; border: 1px solid #b1e5e6; background: #b1e5e620; border-radius: 16px; }
+.family-invite-summary h2 { font-size: 1.2rem; margin: 0 0 12px; }
+.family-invite-summary p { font-size: .9rem; line-height: 1.6; }
+.family-invite-summary small { color: #587173; }
+.family-invite-privacy { display: flex; align-items: flex-start; gap: 8px; font-size: .85rem; line-height: 1.7; padding: 14px 0; }
+.family-invite-privacy > svg { flex-shrink: 0; margin-top: 4px; }
+.family-invite-buttons { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+.family-invite-buttons a { text-align: center; text-decoration: none; }
+.family-invite-dismiss { display: inline-block; margin-top: 22px; font-size: .85rem; }
+.family-invitation-card button:focus-visible, .family-invitation-card a:focus-visible { outline: 2px solid #36787a; outline-offset: 3px; }
+@media (max-width: 760px) {
+  .family-member-card { align-items: stretch; flex-direction: column; gap: 16px; }
+  .family-member-controls { justify-content: flex-start; }
+  .family-invite-table, .family-invite-table tbody, .family-invite-table tr, .family-invite-table td { display: block; width: 100%; box-sizing: border-box; }
+  .family-invite-table thead { display: none; }
+  .family-invite-table tr { padding: 14px 0; border-top: 1px solid #b1e5e680; }
+  .family-invite-table td { border: 0; padding: 6px 0; }
+  .family-invite-table td::before { content: attr(data-label); display: block; color: #587173; font-size: .7rem; margin-bottom: 6px; }
+}
+@media (max-width: 500px) {
+  .family-invitations .family-invite-form { grid-template-columns: minmax(0, 1fr); }
+  .family-invite-form > button, .family-invite-copy > button { width: 100%; }
+  .family-created-invite { padding: 15px; }
+  .family-invitation-url { padding: 12px; font-size: .78rem; }
+  .family-invitation-page { padding: 24px 12px; }
+  .family-invitation-card { padding: 23px 18px; }
+  .family-invite-buttons { flex-direction: column; align-items: stretch; }
+  .family-invite-buttons > * { width: 100%; box-sizing: border-box; }
+  .family-confirm-overlay { padding: 12px; }
+  .family-confirm-dialog { padding: 20px; }
+}
+
+/* Family content fills the workspace; the application sidebar is unchanged. */
+.db-main.family-page { width: 100%; gap: 0; }
+.family-page > .db-page-intro { align-items: flex-start; margin-bottom: 28px; }
+.family-page > .db-page-intro h1 { font-size: clamp(25px, 2.5vw, 34px); letter-spacing: -.035em; }
+.family-page > .db-page-intro p { max-width: 650px; line-height: 1.7; }
+.family-context { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px 13px; border: 1px solid #b9ceca; border-radius: 12px; background: #fffdf780; font-size: .82rem; max-width: 280px; overflow-wrap: anywhere; }
+.family-context small { color: #587173; border-left: 1px solid #b9ceca; padding-left: 8px; }
+.family-workspace { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.family-content { display: grid; gap: 22px; min-width: 0; }
+.family-content > .db-panel { margin: 0; padding: 24px; background: #fffdf7d9; border: 1px solid #d4ded2; border-radius: 18px; box-shadow: 0 4px 16px #174b5005; }
+.family-content .db-panel-heading { align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+.family-content .db-panel-heading h3 { font-size: 1.1rem; line-height: 1.4; letter-spacing: -.015em; }
+.family-content .db-panel-heading p { line-height: 1.7; max-width: 600px; }
+.family-content .db-note, .family-content > p, .family-content .db-panel > p { font-size: .85rem; line-height: 1.75; }
+.family-overview { gap: 20px; margin: 0; }
+.family-overview > div { padding: 14px; border-radius: 12px; background: #eeead747; }
+.family-overview dt { font-size: .75rem; }
+.family-overview dd { font-size: 1.05rem; line-height: 1.5; }
+.family-task-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.family-task { display: flex; align-items: center; gap: 12px; padding: 17px 14px; border: 1px solid #b9ceca; border-radius: 13px; text-decoration: none; color: #174b50; transition: background .18s, border-color .18s; min-width: 0; }
+.family-task:hover { background: #b1e5e62e; border-color: #36787a; }
+.family-task > span:nth-child(2) { flex: 1; min-width: 0; }
+.family-task strong { display: block; font-size: .84rem; font-weight: 650; line-height: 1.5; }
+.family-task small { display: block; font-size: .73rem; color: #587173; line-height: 1.6; margin-top: 3px; }
+.family-task-icon { display: grid; place-items: center; flex-shrink: 0; width: 38px; height: 38px; border-radius: 11px; background: #b1e5e650; }
+.family-task:nth-child(3n) .family-task-icon { background: #f7adad40; }
+.family-task:nth-child(3n + 2) .family-task-icon { background: #eeead7; }
+.family-task > svg { flex-shrink: 0; }
+.family-page .family-shared-goals { grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); }
+.family-page .family-shared-goal { padding: 20px; background: #fffdf7; border-color: #d4ded2; }
+.family-page .family-shared-goal > h3 { margin: 0 0 14px; font-size: 1rem; }
+.family-page .family-shared-goal > strong { display: block; font-size: 1.6rem; letter-spacing: -.03em; }
+.family-table th { background: #eeead740; font-size: .73rem; font-weight: 650; }
+.family-table td { font-size: .83rem; }
+.family-table tbody tr:hover { background: #b1e5e617; }
+.family-page .family-actions { justify-content: flex-start; margin-top: 16px; }
+.family-page .family-member-card { background: #fffdf7; align-items: flex-start; flex-wrap: wrap; }
+.family-page .family-member-controls { justify-content: flex-start; }
+.family-page .family-invitations { display: grid; gap: 22px; min-width: 0; }
+.family-page .family-invitations .db-panel { background: #fffdf7d9; border: 1px solid #d4ded2; border-radius: 18px; padding: 24px; margin: 0; }
+.family-page :is(a, summary):focus-visible { outline: 2px solid #36787a; outline-offset: 3px; }
+@media (max-width: 600px) { .family-content > .db-panel, .family-page .family-invitations .db-panel { padding: 18px; } .family-task-grid { grid-template-columns: minmax(0, 1fr); } .family-page > .db-page-intro { gap: 12px; } .family-context { max-width: 100%; } .family-goal-numbers { grid-template-columns: minmax(0, 1fr); } .family-overview { gap: 10px; } .family-overview dd { font-size: .9rem; } .family-member-controls { gap: 14px; } .family-content .db-panel-heading > button { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .family-task { transition: none; } }
+.family-return { display: inline-flex; align-items: center; gap: 7px; justify-self: start; margin-bottom: 16px; color: #24575b; text-decoration: none; font-size: .85rem; font-weight: 600; }
+.family-return:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.family-invite-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.family-invite-actions button { white-space: normal; }

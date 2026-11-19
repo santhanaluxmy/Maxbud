@@ -55,6 +55,12 @@ def categories(user:User=Depends(current_user),db:Session=Depends(get_db)):
     return expense_categories(db,user)
 
 
+@router.get('/merchants')
+def merchants(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    rules = db.scalars(select(MerchantRule).where(MerchantRule.user_id == user.id).order_by(MerchantRule.merchant))
+    return [{"merchant": rule.merchant, "category": rule.category} for rule in rules]
+
+
 def usage(db, user, lock=False):
     first = now_utc().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     if lock:

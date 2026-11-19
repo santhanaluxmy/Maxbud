@@ -50,3 +50,4 @@ class AuthOut(BaseModel):
     token_type: str = "bearer"
     user: UserOut
     onboarding_completed: bool
+    has_household: bool = False

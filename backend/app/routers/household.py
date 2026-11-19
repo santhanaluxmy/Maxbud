@@ -5,7 +5,7 @@ import secrets
 from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 from app.core.deps import current_user
 from app.database import get_db
@@ -17,6 +17,7 @@ from app.models.user import User, now_utc
 from app.services.family import get_family, active_users, overview
 from app.services.subscriptions import entitlement, family_access, family_capacity
 from app.services import household as service
+from app.services import invitations as invitation_delivery
 from app.routers.reminders import ReminderIn, PayIn, next_due
 
 router=APIRouter(prefix='/family',tags=['Shared household'])
@@ -59,9 +60,14 @@ def settings(data:Name,user:User=Depends(current_user),db:Session=Depends(get_db
 def close(user:User=Depends(current_user),db:Session=Depends(get_db)):
     family=get_family(db,user,owner_only=True,lock=True)
     if len(active_users(db,family,lock=True,include_inactive=True))>1: raise HTTPException(409,'Remove other members before closing; ownership transfer is not supported')
-    if db.scalar(select(Goal.id).where(Goal.family_id==family.id).limit(1)) or db.scalar(select(Account.id).where(Account.family_id==family.id).limit(1)) or db.scalar(select(Transaction.id).where(Transaction.family_id==family.id).limit(1)):
+    if (db.scalar(select(Goal.id).where(Goal.family_id==family.id).limit(1))
+            or db.scalar(select(Account.id).where(Account.family_id==family.id).limit(1))
+            or db.scalar(select(Transaction.id).where(Transaction.family_id==family.id).limit(1))
+            or db.scalar(select(Budget.id).where(Budget.family_id==family.id).limit(1))
+            or db.scalar(select(Reminder.id).where(Reminder.family_id==family.id).limit(1))):
         raise HTTPException(409,'This household has shared records. It cannot be closed through the empty-household action.')
     family.is_active=False
+    for invitation in db.scalars(select(FamilyInvitation).where(FamilyInvitation.family_id==family.id,FamilyInvitation.status=='pending').with_for_update()): invitation.status='revoked'
     for membership in db.scalars(select(FamilyMembership).where(FamilyMembership.family_id==family.id).with_for_update()): membership.status='removed'
     db.commit();return {'message':'Empty household closed. Personal records and subscription are unchanged.'}
 
@@ -95,27 +101,103 @@ class Invite(Permissions):
     email:EmailStr
 
 
+def _email_invitation(db, row, token, family, user, previous_token_state=None):
+    url = invitation_delivery.invitation_url(token)
+    db.add(PlatformEvent(user_id=user.id, kind='family_invitation_email', target=str(row.id), details={'status': 'unconfirmed'}))
+    # Keep the invitation and release household locks before the SMTP request.
+    db.commit()
+    failure = None
+    message_id = None
+    try:
+        message_id = invitation_delivery.send_invitation(row.email, household_name=family.name, inviter_name=user.full_name, url=url)
+        delivery_status = 'submitted'
+    except Exception as error:
+        delivery_status = 'failed'
+        failure = error
+    details = {'status': delivery_status}
+    if message_id:
+        details['message_id'] = message_id
+    if failure:
+        # Record only bounded codes, never provider responses or credentials.
+        details['reason'] = type(failure).__name__[:80]
+        smtp_code = getattr(failure, 'smtp_code', None)
+        if isinstance(smtp_code, int):
+            details['smtp_code'] = smtp_code
+        if previous_token_state is not None:
+            current = db.scalar(select(FamilyInvitation).where(FamilyInvitation.id == row.id).with_for_update().execution_options(populate_existing=True))
+            if current.status == 'pending' and current.token_hash == hashlib.sha256(token.encode()).hexdigest():
+                current.token_hash, current.expires_at = previous_token_state
+    db.add(PlatformEvent(user_id=user.id, kind='family_invitation_email', target=str(row.id), details=details))
+    db.commit()
+    if failure:
+        if isinstance(failure, HTTPException):
+            raise failure
+        raise HTTPException(502, invitation_delivery.submission_failure(failure))
+    return {'id': row.id, 'token': token, 'expires_at': row.expires_at,
+            'invitation_url': url, 'is_local_url': False,
+            'delivery_status': delivery_status, 'delivery': invitation_delivery.DELIVERY_MESSAGES[delivery_status]}
+
+
 @router.post('/invitations',status_code=201)
 def invite(data:Invite,user:User=Depends(current_user),db:Session=Depends(get_db)):
     family=get_family(db,user,owner_only=True,lock=True);family_access(db,family,write=True)
     email=str(data.email).lower()
     if email==user.email.lower(): raise HTTPException(409,'You are already the owner')
+    invitation_delivery.require_configuration()
     pending=db.scalars(select(FamilyInvitation).where(FamilyInvitation.family_id==family.id,FamilyInvitation.status=='pending',FamilyInvitation.expires_at>now_utc()).with_for_update()).all()
-    if any(i.email.lower()==email for i in pending): raise HTTPException(409,'An active invitation already exists for that email')
+    if any(i.email.lower()==email for i in pending): raise HTTPException(409,'An active invitation already exists for that email. Use Resend Invitation to email it again.')
     members=active_users(db,family,lock=True,include_inactive=True)
     if any(m.email.lower()==email for m in members): raise HTTPException(409,'This person is already a member')
     if len(members)+len(pending)>=family_capacity(db,family): raise HTTPException(409,'Household capacity is full or reserved by pending invitations')
     if data.can_add_shared and not data.can_view_shared: raise HTTPException(422,'Editing requires shared viewing permission')
     token=secrets.token_urlsafe(32)
     row=FamilyInvitation(family_id=family.id,invited_by=user.id,email=email,token_hash=hashlib.sha256(token.encode()).hexdigest(),expires_at=now_utc()+timedelta(days=7),can_view_shared=data.can_view_shared,can_add_shared=data.can_add_shared)
-    db.add(row);db.commit()
-    return {'id':row.id,'token':token,'expires_at':row.expires_at,'delivery':'Share this link securely with the invited person. No email delivery was attempted.'}
+    db.add(row);db.flush()
+    return _email_invitation(db, row, token, family, user)
+
+
+@router.post('/invitations/{key}/resend')
+def resend(key:int,user:User=Depends(current_user),db:Session=Depends(get_db)):
+    family=get_family(db,user,owner_only=True,lock=True);family_access(db,family,write=True)
+    invitation_delivery.require_configuration()
+    row=db.scalar(select(FamilyInvitation).where(FamilyInvitation.id==key,FamilyInvitation.family_id==family.id).with_for_update().execution_options(populate_existing=True))
+    if row is None: raise HTTPException(404,'Invitation not found')
+    if row.status!='pending' or row.expires_at<=now_utc(): raise HTTPException(409,'Only an unexpired pending invitation can be resent')
+    members=active_users(db,family,lock=True,include_inactive=True)
+    if any(member.email.casefold()==row.email.casefold() for member in members): raise HTTPException(409,'This person is already a member')
+    pending=db.scalars(select(FamilyInvitation.id).where(FamilyInvitation.family_id==family.id,FamilyInvitation.status=='pending',FamilyInvitation.expires_at>now_utc()).with_for_update()).all()
+    if len(members)+len(pending)>family_capacity(db,family): raise HTTPException(409,'Household capacity is full or reserved by other invitations')
+    latest=db.scalar(select(PlatformEvent).where(PlatformEvent.kind=='family_invitation_email',PlatformEvent.target==str(row.id)).order_by(PlatformEvent.id.desc()).limit(1))
+    if latest and latest.details.get('status') in {'submitted','unconfirmed'} and latest.created_at>now_utc()-timedelta(seconds=60):
+        raise HTTPException(429,'Please wait one minute before resending this invitation')
+    # The plaintext token is never stored. An explicit resend replaces the old
+    # link while retaining the same invitation, permissions and reserved seat.
+    previous_token_state = (row.token_hash, row.expires_at)
+    token=secrets.token_urlsafe(32)
+    row.token_hash=hashlib.sha256(token.encode()).hexdigest()
+    row.expires_at=now_utc()+timedelta(days=7)
+    return _email_invitation(db, row, token, family, user, previous_token_state=previous_token_state)
 
 
 @router.get('/invitations')
 def invitations(user:User=Depends(current_user),db:Session=Depends(get_db)):
     family=get_family(db,user,owner_only=True)
-    return [{'id':r.id,'email':r.email,'status':'expired' if r.status=='pending' and r.expires_at<=now_utc() else r.status,'expires_at':r.expires_at} for r in db.scalars(select(FamilyInvitation).where(FamilyInvitation.family_id==family.id).order_by(FamilyInvitation.id.desc()).limit(100))]
+    now=now_utc()
+    active=(FamilyInvitation.status=='pending') & (FamilyInvitation.expires_at>now)
+    rows=db.scalars(select(FamilyInvitation).where(FamilyInvitation.family_id==family.id).order_by(case((active,0),else_=1),FamilyInvitation.id.desc()).limit(100)).all()
+    latest={}
+    if rows:
+        events=db.scalars(select(PlatformEvent).where(PlatformEvent.kind=='family_invitation_email',PlatformEvent.target.in_([str(r.id) for r in rows])).order_by(PlatformEvent.id.desc()))
+        for event in events:
+            latest.setdefault(event.target,event)
+    result=[]
+    for row in rows:
+        event=latest.get(str(row.id))
+        delivery_status=event.details.get('status','unknown') if event else 'unknown'
+        result.append({'id':row.id,'email':row.email,'status':'expired' if row.status=='pending' and row.expires_at<=now else row.status,
+                       'expires_at':row.expires_at,'created_at':row.created_at,'delivery_status':delivery_status,
+                       'email_submitted_at':event.created_at if event and delivery_status=='submitted' else None})
+    return result
 
 
 @router.delete('/invitations/{key}')
@@ -127,8 +209,29 @@ def revoke(key:int,user:User=Depends(current_user),db:Session=Depends(get_db)):
     db.commit();return {'status':row.status}
 
 
-class Answer(Clean):
+class InvitationToken(Clean):
     token:str=Field(min_length=32,max_length=100)
+
+
+@router.post('/invitations/preview')
+def preview(data:InvitationToken,db:Session=Depends(get_db)):
+    """Only a bearer of the unguessable token can preview invitation metadata.
+
+    Tokens stay in a POST body and URL fragment, never in access-log paths.
+    Preview does not grant membership or expose financial/subscription records.
+    """
+    digest=hashlib.sha256(data.token.encode()).hexdigest()
+    row=db.scalar(select(FamilyInvitation).where(FamilyInvitation.token_hash==digest))
+    if row is None: raise HTTPException(404,'This invitation link is invalid. Ask the owner for a new invitation.')
+    family=db.get(Family,row.family_id)
+    if family is None or not family.is_active: raise HTTPException(410,'This household is no longer active. Ask the owner for a new invitation.')
+    inviter=db.get(User,row.invited_by)
+    status='expired' if row.status=='pending' and row.expires_at<=now_utc() else row.status
+    return {'household_name':family.name,'inviter_name':inviter.full_name if inviter else 'The household owner',
+            'invited_email':row.email,'status':status,'expires_at':row.expires_at}
+
+
+class Answer(InvitationToken):
     accept:bool
 
 

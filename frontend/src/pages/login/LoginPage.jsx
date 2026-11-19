@@ -12,6 +12,7 @@ import {
 
 import logo from "../../assets/images/maxbud-logo.png";
 import savingsHero from "../../assets/images/maxbud2.png";
+import { authDestination, pendingInvitation } from "../../services/familyInvitation";
 
 import {
   loginUser,
@@ -31,6 +32,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   function handleAuthSuccess(result) {
@@ -40,12 +42,7 @@ export default function LoginPage() {
 
     saveAuthSession(result, remember);
 
-    navigate(
-      result.user?.role === "admin" ? "/dashboard/admin" : result.onboarding_completed
-        ? "/dashboard"
-        : "/onboarding",
-      { replace: true }
-    );
+    navigate(authDestination(result), { replace: true });
   }
 
   async function handleSubmit(e) {
@@ -54,20 +51,12 @@ export default function LoginPage() {
 
     const cleanEmail = email.trim().toLowerCase();
 
-    if (!cleanEmail) {
-      setFeedback("Please enter your email address.");
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setFeedback("Please enter a valid email address.");
-      return;
-    }
-
-    if (!password) {
-      setFeedback("Please enter your password.");
-      return;
-    }
+    const errors = {};
+    if (!cleanEmail) errors.email = "Please enter your email address.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) errors.email = "Please enter a valid email address.";
+    if (!password) errors.password = "Please enter your password.";
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) return;
 
     setLoading(true);
 
@@ -152,6 +141,7 @@ export default function LoginPage() {
             <p>
               Sign in to continue managing your finances.
             </p>
+            {pendingInvitation() && <p role="status">Your household invitation is saved. Sign in with the invited email to review and accept it.</p>}
 
             {/* Email and Password Form */}
             <form onSubmit={handleSubmit} noValidate>
@@ -163,17 +153,22 @@ export default function LoginPage() {
                   <Mail size={18} />
 
                   <input
+                    aria-label="Email Address"
+                    aria-invalid={Boolean(fieldErrors.email)}
+                    aria-describedby={fieldErrors.email ? "email-error" : undefined}
                     type="email"
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
+                      setFieldErrors(previous => ({ ...previous, email: "" }));
                       setFeedback("");
                     }}
                     autoComplete="email"
                     disabled={loading}
                   />
                 </span>
+                {fieldErrors.email && <span id="email-error" className="auth-field-error" role="alert">{fieldErrors.email}</span>}
               </label>
 
               <label>
@@ -183,11 +178,15 @@ export default function LoginPage() {
                   <LockKeyhole size={18} />
 
                   <input
+                    aria-label="Password"
+                    aria-invalid={Boolean(fieldErrors.password)}
+                    aria-describedby={fieldErrors.password ? "password-error" : undefined}
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
+                      setFieldErrors(previous => ({ ...previous, password: "" }));
                       setFeedback("");
                     }}
                     autoComplete="current-password"
@@ -213,6 +212,7 @@ export default function LoginPage() {
                     )}
                   </button>
                 </span>
+                {fieldErrors.password && <span id="password-error" className="auth-field-error" role="alert">{fieldErrors.password}</span>}
               </label>
 
               <div className="auth-options">
@@ -231,6 +231,8 @@ export default function LoginPage() {
 
                 <Link to="/forgot-password" className="auth-recovery-link">Forgot password?</Link>
               </div>
+
+              {feedback && <div className="auth-feedback" role="alert">{feedback}</div>}
 
               <button
                 type="submit"
@@ -273,17 +275,6 @@ export default function LoginPage() {
                 </div>
               )}
             </div>
-
-            {/* Error Messages */}
-            {feedback && (
-              <div
-                className="auth-feedback"
-                role="alert"
-                style={{ marginTop: 14 }}
-              >
-                {feedback}
-              </div>
-            )}
 
             <p className="auth-switch">
               New to MaxBud?{" "}

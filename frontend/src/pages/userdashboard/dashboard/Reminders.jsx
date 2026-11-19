@@ -25,7 +25,7 @@ export default function Reminders() {
     try { await fn(); await load(); } catch (e) { setError(e.message); } finally { setBusy(false); }
   }
   return <>
-    <div className="db-page-intro"><div><span className="db-page-subtitle">STAY ONE STEP AHEAD</span><h1>Reminders</h1><p>Keep upcoming bills and recurring payments in view.</p></div></div>
+    <div className="db-page-intro"><div><h1>Reminders</h1></div></div>
     <div className="db-section-actions"><button className="db-primary-btn" onClick={() => setForm(fresh())}>New reminder</button></div>
     {error && <p className="db-error" role="alert">{error}</p>}
     {loading && <p role="status">Loading reminders…</p>}

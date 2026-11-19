@@ -100,7 +100,7 @@ def family_access(db,family,write=False):
     if write:
         from app.services.family import active_users
         if len(active_users(db, family, lock=True, include_inactive=True)) > PLAN_LIMITS['family_pack']['family_members']:
-            raise HTTPException(409, 'Family Pack supports one owner and up to five other people. Remove extra memberships to resume shared editing; history is preserved.')
+            raise HTTPException(409, 'Family Pack supports one owner and up to four other people (five total). Remove extra memberships to resume shared editing; history is preserved.')
     return False, valid
 
 

@@ -1,7 +1,7 @@
 
 import { apiUrl } from "../api/base.js";
 
-async function request(path, data) {
+async function request(path, data, signal) {
   let response;
 
   try {
@@ -11,6 +11,7 @@ async function request(path, data) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
+      ...(signal ? { signal } : {}),
     });
   } catch {
     throw new Error(
@@ -39,6 +40,23 @@ async function request(path, data) {
   return result;
 }
 
+function signInRequest(path, data) {
+  // Bound the entire sign-in, including reading the response body. Without a
+  // deadline a stalled fetch leaves the form waiting before its finally block.
+  const controller = new AbortController();
+  let timer;
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error("Sign-in timed out. Please try again."));
+      controller.abort();
+    }, 15000);
+  });
+  return Promise.race([
+    request(path, data, controller.signal),
+    deadline,
+  ]).finally(() => clearTimeout(timer));
+}
+
 export function registerUser(data) {
   return request("/auth/register", data);
 }
@@ -46,13 +64,13 @@ export function registerUser(data) {
 export function loginUser(data) {
   localStorage.removeItem("maxbud_auth");
   sessionStorage.removeItem("maxbud_auth");
-  return request("/auth/login", data);
+  return signInRequest("/auth/login", data);
 }
 
 // Requires a FastAPI POST /auth/google endpoint.
 // Backend must verify the Google ID token securely.
 export function googleLogin(credential) {
-  return request("/auth/google", {
+  return signInRequest("/auth/google", {
     credential,
   });
 }
@@ -69,6 +87,7 @@ export function saveAuthSession(result, remember = false) {
       token: result.access_token,
       user: result.user,
       onboarding_completed: result.onboarding_completed,
+      has_household: Boolean(result.has_household),
     })
   );
 }

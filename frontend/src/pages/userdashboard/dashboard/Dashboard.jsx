@@ -1,12 +1,13 @@
 import CashFlowTable, { CashFlowSummary } from "./CashFlow";
 import AccountTransfer from "./AccountTransfer";
+import SavingsTransfers from "./SavingsTransfers";
 
 import DashboardOverview from "./DashboardOverview";
 import Modal from "../../../components/common/Modal";
 import Loading from "../../../components/common/Loading";
 import EmptyState from "../../../components/common/EmptyState";
 import GlassCard from "../../../components/common/GlassCard";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -26,7 +27,6 @@ import {
   TrendingUp,
   TrendingDown,
   Check,
-  ShieldCheck,
   Filter,
   Trash2,
   Pencil,
@@ -73,7 +73,6 @@ function MetricCard({
   value,
   icon,
   tone,
-  note,
   prominent = false,
 }) {
   return (
@@ -91,7 +90,6 @@ function MetricCard({
       </div>
       <span className="db-metric-label">{title}</span>
       <strong>{value}</strong>
-      <small>{note}</small>
     </div>
   );
 }
@@ -537,6 +535,7 @@ export default function Dashboard() {
   });
 
   const [saving, setSaving] = useState(false);
+  const contributionPending = useRef(false);
   const [filter, setFilter] = useState("all");
 
   async function refresh() {
@@ -574,9 +573,8 @@ export default function Dashboard() {
 
     if (accs.status === "fulfilled") {
       setAccounts(
-        Array.isArray(accs.value)
-          ? accs.value
-          : accs.value?.items || []
+        (Array.isArray(accs.value) ? accs.value : accs.value?.items || [])
+          .filter(account => account.kind !== "goal_savings")
       );
     } else {
       setFeatureError((prev) =>
@@ -634,9 +632,8 @@ export default function Dashboard() {
 
         if (accs.status === "fulfilled") {
           setAccounts(
-            Array.isArray(accs.value)
-              ? accs.value
-              : accs.value?.items || []
+            (Array.isArray(accs.value) ? accs.value : accs.value?.items || [])
+              .filter(account => account.kind !== "goal_savings")
           );
         } else {
           setFeatureError((prev) =>
@@ -666,6 +663,8 @@ export default function Dashboard() {
 
   const currency =
     data?.currency || person.currency || "LKR";
+  const savingsAccounts = accounts.filter(account => !account.is_archived && account.kind !== "goal_savings" && account.currency === currency);
+  const savingsSource = savingsAccounts.find(account => String(account.id) === contribution.account_id);
 
   const budgets = Array.isArray(data?.budgets)
     ? data.budgets
@@ -784,6 +783,22 @@ export default function Dashboard() {
     } catch (err) {
       setError(err.message);
     }
+  }
+
+  async function submitContribution(e) {
+    e.preventDefault();
+    if (contributionPending.current) return;
+    contributionPending.current = true;
+    setSaving(true);
+    setError("");
+    try {
+      await api(`/goals/${contribution.id}/contribute`, { method: "POST", data: {
+        request_id: contribution.request_id, account_id: Number(contribution.account_id), amount: String(contribution.amount),
+      } });
+      setModal(null);
+      await refresh();
+    } catch (err) { setError(err.message); }
+    finally { contributionPending.current = false; setSaving(false); }
   }
 
   async function submitSimple(e, path, payload) {
@@ -927,14 +942,7 @@ export default function Dashboard() {
       <main className="db-main">
         <div className="db-page-intro">
           <div>
-            <span className="db-page-subtitle">
-              MAXBUD / YOUR WORKSPACE
-            </span>
             <h1>{title}</h1>
-            <p>
-              A clearer view of your money, one step at
-              a time.
-            </p>
           </div>
         </div>
 
@@ -961,7 +969,6 @@ export default function Dashboard() {
         {tab === "transactions" && (
           <GlassCard
             title="Transaction history"
-            subtitle={`${shownTransactions.length} recorded transactions`}
             action={actionButton(
               "Add transaction",
               () => startTransaction("expense")
@@ -970,7 +977,7 @@ export default function Dashboard() {
             <div className="db-filterbar">
               <Filter size={17} />
               <input aria-label="Search transactions" placeholder="Search transactions" value={searchText} onChange={e => setSearchText(e.target.value)}/>
-              {["all", "income", "expense"].map(
+              {["all", "income", "expense", "transfers"].map(
                 (item) => (
                   <button
                     type="button"
@@ -984,21 +991,21 @@ export default function Dashboard() {
                       ? "All"
                       : item === "income"
                         ? "Income"
-                        : "Expenses"}
+                        : item === "expense" ? "Expenses" : "Transfers"}
                   </button>
                 )
               )}
             </div>
 
-            <TransactionRows
+            {filter === "transfers" ? <SavingsTransfers search={searchText} onChanged={refresh}/> : <TransactionRows
               data={shownTransactions}
               currency={currency}
               onEdit={(txn) =>
                 startTransaction("expense", txn)
               }
               onDelete={deleteTransaction}
-            />
-            {moreTransactions && <button className="db-outline-btn" disabled={loadingMore} onClick={async () => { setLoadingMore(true); try { const rows = await api(`/transactions?limit=100&offset=${transactions.length}`); setTransactions(previous => [...previous, ...rows.filter(row => !previous.some(item => item.id === row.id))]); setMoreTransactions(rows.length === 100); } catch (err) { setError(err.message); } finally { setLoadingMore(false); } }}>{loadingMore ? "Loading…" : "Load more transactions"}</button>}
+            />}
+            {filter !== "transfers" && moreTransactions && <button className="db-outline-btn" disabled={loadingMore} onClick={async () => { setLoadingMore(true); try { const rows = await api(`/transactions?limit=100&offset=${transactions.length}`); setTransactions(previous => [...previous, ...rows.filter(row => !previous.some(item => item.id === row.id))]); setMoreTransactions(rows.length === 100); } catch (err) { setError(err.message); } finally { setLoadingMore(false); } }}>{loadingMore ? "Loading…" : "Load more transactions"}</button>}
           </GlassCard>
         )}
 
@@ -1043,7 +1050,6 @@ export default function Dashboard() {
                     <button onClick={() => { setAccountEditId(account.id); setAccountForm({ name: account.name, kind: account.kind, opening_balance: account.opening_balance }); setModal("account"); }}>Edit</button>
                     <button onClick={async () => { if (!window.confirm(account.is_archived ? "Restore this account?" : "Archive this account? Linked records and balances will be preserved.")) return; try { await api(`/accounts/${account.id}/archive`, { method: "POST", data: { archived: !account.is_archived } }); await refresh(); } catch (err) { setError(err.message); } }}>{account.is_archived ? "Restore" : "Archive"}</button>
                   </div>
-                  <p>Current tracked balance</p>
                   <strong>
                     {money(
                       account.current_balance ??
@@ -1052,10 +1058,6 @@ export default function Dashboard() {
                       account.currency || currency
                     )}
                   </strong>
-                  <small>
-                    Account #{account.id} · Used for
-                    recording transactions
-                  </small>
                 </article>
               ))}
             </div>
@@ -1070,11 +1072,6 @@ export default function Dashboard() {
               </GlassCard>
             )}
 
-            <p className="db-note">
-              <ShieldCheck size={16} />
-              MaxBud tracks accounts manually; it does
-              not connect to banks or move actual money.
-            </p>
           </>
         )}
 
@@ -1250,6 +1247,8 @@ export default function Dashboard() {
                     </span>
 
                     <Progress value={percent} />
+                    {Number(goal.legacy_allocated_amount) > 0 && <p className="db-note">Prior allocation: {money(goal.legacy_allocated_amount, currency)} (no account debit).</p>}
+                    {goal.has_transfer_history && <p className="db-note">Account-backed savings: {money(goal.account_backed_amount, currency)}</p>}
 
                     <div className="db-row-actions">
                       <button onClick={() => { setGoalEditId(goal.id); setGoalForm({ name: goal.name, target_amount: goal.target, saved_amount: goal.saved, target_date: goal.target_date || "" }); setModal("goal"); }}>Edit</button>
@@ -1264,9 +1263,11 @@ export default function Dashboard() {
                         type="button"
                         onClick={() => {
                           if (goal.status !== "active") return;
+                          setError("");
                           setContribution({
                             id: goal.id,
                             amount: "",
+                            account_id: "",
                             request_id: crypto.randomUUID(),
                           });
                           setModal("contribute");
@@ -1290,12 +1291,6 @@ export default function Dashboard() {
               </GlassCard>
             )}
 
-            <p className="db-note">
-              <Info size={16} />
-              Contributions update your goal
-              allocation. They do not transfer money
-              between actual accounts.
-            </p>
           </>
         )}
 
@@ -1313,7 +1308,6 @@ export default function Dashboard() {
                 )}
                 icon={Wallet}
                 tone="aqua"
-                note="Current tracked balance"
               />
               <MetricCard
                 title="Monthly income"
@@ -1323,7 +1317,6 @@ export default function Dashboard() {
                 )}
                 icon={TrendingUp}
                 tone="aqua"
-                note="Recorded income"
               />
               <MetricCard
                 title="Monthly expenses"
@@ -1333,7 +1326,6 @@ export default function Dashboard() {
                 )}
                 icon={TrendingDown}
                 tone="pink"
-                note="Recorded expenses"
               />
               <MetricCard
                 title="Allocated savings"
@@ -1343,7 +1335,6 @@ export default function Dashboard() {
                 )}
                 icon={PiggyBank}
                 tone="cream"
-                note="Savings-goal allocations"
               />
             </div>
 
@@ -1958,8 +1949,9 @@ export default function Dashboard() {
               </label>
 
               <label>
-                Already saved
+                {goalEditId && allGoals.find(goal => goal.id === goalEditId)?.has_transfer_history ? "Saved amount (managed by transfers)" : "Already saved (prior allocation)"}
                 <input
+                  readOnly={Boolean(goalEditId && allGoals.find(goal => goal.id === goalEditId)?.has_transfer_history)}
                   min="0"
                   step="0.01"
                   type="number"
@@ -2010,28 +2002,27 @@ export default function Dashboard() {
       {modal === "contribute" && (
         <Modal
           title="Add to savings goal"
-          onClose={() => setModal(null)}
+          onClose={() => { if (!contributionPending.current) setModal(null); }}
         >
           <form
             className="db-modal-form"
-            onSubmit={(e) =>
-              submitSimple(
-                e,
-                `/goals/${contribution.id}/contribute`,
-                {
-                  request_id: contribution.request_id,
-                  amount: String(
-                    contribution.amount
-                  ),
-                }
-              )
-            }
+            onSubmit={submitContribution}
           >
+            <label>
+              Transfer From Account
+              <select aria-label="Transfer From Account" required disabled={saving} value={contribution.account_id || ""} onChange={e => setContribution({ ...contribution, account_id: e.target.value })}>
+                <option value="">Select a source account</option>
+                {savingsAccounts.map(account => <option key={account.id} value={account.id}>{account.name} — {money(account.current_balance, account.currency)} available</option>)}
+              </select>
+            </label>
+            {!savingsAccounts.length && <p className="db-error" role="alert">Add an active account in {currency} before contributing.</p>}
             <label>
               Contribution amount ({currency})
               <input
                 required
+                disabled={saving}
                 type="number"
+                max={savingsSource ? Math.max(0, Number(savingsSource.current_balance)) : undefined}
                 min="0.01"
                 step="0.01"
                 value={contribution.amount}
@@ -2045,8 +2036,7 @@ export default function Dashboard() {
             </label>
 
             <p className="db-note">
-              This tracks your goal allocation; it
-              does not move money from an account.
+              Moves money from your account into this goal. This is an internal transfer, not income or an expense.
             </p>
 
             {error && (
@@ -2055,7 +2045,7 @@ export default function Dashboard() {
 
             <button
               className="db-primary-btn db-modal-submit"
-              disabled={saving}
+              disabled={saving || !savingsAccounts.length || !contribution.account_id}
             >
               {saving
                 ? "Saving…"

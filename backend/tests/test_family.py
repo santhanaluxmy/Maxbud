@@ -26,6 +26,17 @@ class FamilyTests(unittest.TestCase):
         limits = patch.object(get_settings(), "RATE_LIMIT_ENABLED", False)
         limits.start()
         self.addCleanup(limits.stop)
+        mail_settings = patch.multiple(get_settings(), PUBLIC_FRONTEND_URL='https://maxbud.example.com',
+                                       SMTP_HOST='smtp.example.com', SMTP_PORT=587, SMTP_SECURITY='starttls',
+                                       SMTP_USERNAME='synthetic', SMTP_PASSWORD='synthetic', SMTP_FROM='maxbud@example.com')
+        mail_settings.start()
+        self.addCleanup(mail_settings.stop)
+        email_reader = patch('app.services.invitations._email_settings', side_effect=get_settings)
+        email_reader.start()
+        self.addCleanup(email_reader.stop)
+        mail_transport = patch('app.services.invitations.send_invitation', return_value='<synthetic@example.com>')
+        mail_transport.start()
+        self.addCleanup(mail_transport.stop)
         self.email_suffix = uuid.uuid4().hex[:12] if MYSQL else ""
         if MYSQL:
             self.connection = mysql_engine.connect()
@@ -168,10 +179,10 @@ class FamilyTests(unittest.TestCase):
         self.db.commit()
         self.assertEqual(self.add("premium-member").status_code, 403)
         self.enable_family_pack()
-        for i in range(5):
+        for i in range(4):
             self.assertEqual(self.add(f"member{i}").status_code, 201)
         self.assertEqual(self.add("overflow").status_code, 409)
-        self.assertEqual(self.get("/family").json()["max_members"], 6)
+        self.assertEqual(self.get("/family").json()["max_members"], 5)
         subscription.expires_at = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=1)
         self.db.commit()
         self.assertFalse(self.get("/family").json()["can_edit_shared"])
@@ -247,7 +258,7 @@ class FamilyTests(unittest.TestCase):
         self.assertIsNotNone(self.db.scalar(select(Budget).where(Budget.user_id == uid)))
         self.assertIsNotNone(self.db.scalar(select(Goal).where(Goal.user_id == uid)))
         self.assertEqual(self.get("/dashboard?scope=family").json()["monthly_income"], "0.00")
-        self.assertEqual(self.get("/family").json()["available_slots"], 5)
+        self.assertEqual(self.get("/family").json()["available_slots"], 4)
         self.assertEqual(self.remove(uid).status_code, 404)
 
     def test_expired_and_inactive_auth(self):

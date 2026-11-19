@@ -61,3 +61,24 @@
 :is(.receipt-workspace, .admin-workspace, .advisor-chat) button:disabled { opacity: .55; cursor: not-allowed; }
 @media (max-width: 1024px) { .admin-workspace .db-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .receipt-steps { grid-template-columns: repeat(2, 1fr); } .advisor-header { flex-wrap: wrap; padding: 16px; } .advisor-allowance { margin-left: 0; } .advisor-conversation { padding: 15px; } .advisor-bubble { max-width: 100%; padding: 13px; } .advisor-composer { padding: 15px; } .advisor-composer .db-primary-btn span { display: none; } .admin-workspace .db-metric-grid .glass-card { padding: 14px; } .receipt-workspace .db-two-fields { grid-template-columns: 1fr; } }
+
+/* The advisor uses the page scroll and a single conversation surface. */
+.advisor-page { min-height: calc(100dvh - 150px); display: flex; flex-direction: column; }
+.advisor-page > .db-page-intro { margin-bottom: 0; }
+.advisor-page .advisor-chat { display: flex; flex: 1; flex-direction: column; min-height: 0; height: auto; overflow: visible; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+.advisor-page .advisor-header { padding: 0 0 14px; background: transparent; border: 0; }
+.advisor-page .advisor-conversation { flex: 1; height: auto; min-height: 280px; overflow: visible; padding: 20px 0 32px; width: min(100%, 840px); margin: 0 auto; }
+.advisor-page .advisor-bubble { max-width: 92%; }
+.advisor-page .advisor-assistant { padding-left: 0; padding-right: 0; background: transparent; border: 0; box-shadow: none; }
+.advisor-page .advisor-composer { position: sticky; bottom: 0; z-index: 5; width: min(100%, 840px); margin: 0 auto; padding: 16px 0 8px; background: #f7f3e9; border-top: 1px solid #c9d8d1; }
+.advisor-page .advisor-end { height: 1px; scroll-margin-bottom: 200px; }
+.receipt-review .receipt-review-fields { display: grid; gap: 18px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.receipt-review .receipt-review-fields > legend { font-size: 1.1rem; font-weight: 650; color: #203b40; margin-bottom: 18px; padding: 0; }
+.merchant-selector { position: relative; display: grid; gap: 8px; }
+.merchant-input-wrap { position: relative; }
+.merchant-input-wrap input { padding-right: 38px; }
+.merchant-input-wrap > svg { position: absolute; top: 50%; right: 14px; transform: translateY(-50%); pointer-events: none; color: #587173; }
+.merchant-options { position: absolute; top: 100%; left: 0; right: 0; z-index: 15; margin: 5px 0 0; padding: 6px; list-style: none; background: #fffdf7; border: 1px solid #b9ceca; border-radius: 12px; box-shadow: 0 12px 26px #174b501a; max-height: 270px; overflow-y: auto; }
+.merchant-options li { display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 7px; cursor: pointer; font-size: .88rem; overflow-wrap: anywhere; }
+.merchant-options li[aria-selected=true] { background: #b1e5e655; }
+@media (max-width: 600px) { .advisor-page { min-height: calc(100dvh - 120px); } .advisor-page .advisor-bubble { max-width: 100%; } }

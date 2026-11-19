@@ -46,4 +46,4 @@ def monthly_cash_flow(db, user, accounts, first, next_first):
             'closing_balance': str(running), 'income': str(income), 'expense': str(expense),
             'net_cash_flow': str(income - expense),
             'balance_movement': str(running - opening), 'rows': rows,
-            'basis': 'Combined personal accounts, including archived accounts. Recorded opening balances plus all earlier dated movements form the opening balance; account opening dates are not recorded. Includes shared expenses you paid personally. Household wallets are excluded. Transfers and reimbursements move balances but are not income or expenses. Savings allocations do not move account money.'}
+            'basis': 'Combined personal accounts, including archived accounts. Recorded opening balances plus all earlier dated movements form the opening balance; account opening dates are not recorded. Includes shared expenses you paid personally. Household wallets are excluded. Transfers and reimbursements move balances but are not income or expenses. Savings transfers move money into the savings reserve; prior goal allocations do not debit accounts.'}

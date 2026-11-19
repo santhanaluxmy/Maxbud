@@ -1,4 +1,4 @@
-"""Family Pack contract: owner plus five, private ledgers, shared income/expenses."""
+"""Family Pack contract: owner plus four, private ledgers, shared income/expenses."""
 from datetime import timedelta
 from decimal import Decimal
 import unittest
@@ -37,17 +37,17 @@ class FamilyPackTests(BetaTests):
                 response = self.post('/accounts', {'name': plan + ' private', 'kind': 'cash'})
                 self.assertEqual(response.status_code, 201, response.text)
 
-    def test_owner_can_grant_exactly_five_other_people_access(self):
+    def test_owner_can_grant_exactly_four_other_people_access(self):
         owner, member, _ = self.household()
-        for index in range(4):
+        for index in range(3):
             person = self.trial('extra' + str(index))
             invite = self.post('/family/invitations', {'email': person['user']['email'], 'can_view_shared': True, 'can_add_shared': True}, owner)
             self.assertEqual(invite.status_code, 201, invite.text)
             accepted = self.post('/family/invitations/respond', {'token': invite.json()['token'], 'accept': True}, person)
             self.assertEqual(accepted.status_code, 200, accepted.text)
         overview = self.get('/family', owner).json()
-        self.assertEqual((overview['total_active_members'], overview['max_members'], overview['available_slots']), (6, 6, 0))
-        denied = self.post('/family/invitations', {'email': 'seventh@example.com', 'can_view_shared': True, 'can_add_shared': True}, owner)
+        self.assertEqual((overview['total_active_members'], overview['max_members'], overview['available_slots']), (5, 5, 0))
+        denied = self.post('/family/invitations', {'email': 'sixth@example.com', 'can_view_shared': True, 'can_add_shared': True}, owner)
         self.assertEqual(denied.status_code, 409, denied.text)
         self.assertTrue(self.get('/subscriptions', member).json()['household_allowed'])
         self.assertEqual(self.get('/subscriptions', member).json()['billing_plan'], 'trial')
@@ -170,22 +170,22 @@ class FamilyPackTests(BetaTests):
         people = []
         # Simulate historical memberships; current invitation APIs never allow
         # creating this over-capacity state.
-        for index in range(6):
+        for index in range(5):
             person = self.trial('historical' + str(index))
             people.append(person)
             self.db.add(FamilyMembership(family_id=family.id, user_id=person['user']['id'], status='active', can_view_shared=True, can_add_shared=True))
             self.db.commit()
         response = self.get('/family')
         self.assertEqual(response.status_code, 200, response.text)
-        self.assertEqual(response.json()['max_members'], 6)
-        self.assertEqual(response.json()['total_active_members'], 7)
+        self.assertEqual(response.json()['max_members'], 5)
+        self.assertEqual(response.json()['total_active_members'], 6)
         self.assertFalse(response.json()['can_edit_shared'])
         self.assertEqual(self.post('/family/wallets', {'name': 'Blocked'}).status_code, 409)
         self.assertEqual(self.get('/family/income').status_code, 200)
         self.assertEqual(self.remove(people[-1]['user']['id']).status_code, 200)
         self.assertTrue(self.get('/family').json()['can_edit_shared'])
         self.assertEqual(self.post('/family/wallets', {'name': 'Allowed'}).status_code, 201)
-        self.assertEqual(self.db.scalar(select(func.count(FamilyMembership.id)).where(FamilyMembership.family_id == family.id)), 7)
+        self.assertEqual(self.db.scalar(select(func.count(FamilyMembership.id)).where(FamilyMembership.family_id == family.id)), 6)
 
 
 def load_tests(loader, tests, pattern):

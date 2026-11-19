@@ -129,13 +129,13 @@ class BetaTests(test_family.FamilyTests):
         owner=self.trial('capacity');self.upgrade(owner)
         self.assertEqual(self.post('/family',{'name':'Seats'},owner).status_code,201)
         first=None
-        for index in range(5):
+        for index in range(4):
             result=self.post('/family/invitations',{'email':self.email('seat'+str(index)),'can_view_shared':True,'can_add_shared':True},owner)
             self.assertEqual(result.status_code,201,result.text)
             if first is None:first=result.json()
         self.assertEqual(self.post('/family/invitations',{'email':self.email('seat0'),'can_view_shared':True,'can_add_shared':True},owner).status_code,409)
         self.assertEqual(self.get('/family',owner).json()['available_slots'],0)
-        self.assertEqual(self.get('/family',owner).json()['reserved_slots'],5)
+        self.assertEqual(self.get('/family',owner).json()['reserved_slots'],4)
         self.assertEqual(self.post('/family/invitations',{'email':self.email('extra'),'can_view_shared':True,'can_add_shared':True},owner).status_code,409)
         recipient=self.trial('seat0')
         stored=self.db.get(FamilyInvitation,first['id']);stored.expires_at=now_utc()-timedelta(seconds=1);self.db.commit()

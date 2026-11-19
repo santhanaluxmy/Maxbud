@@ -113,8 +113,11 @@ class SharedFamilyTests(test_family.FamilyTests):
 
     def test_inactive_members_keep_seats_and_cannot_contribute(self):
         member = self.login_member()
-        for name in ['second', 'third', 'fourth', 'fifth']:
+        # login_member already occupies one of the four member seats.
+        for name in ['second', 'third', 'fourth']:
             self.assertEqual(self.add(name).status_code, 201)
+        family = self.get('/family').json()
+        self.assertEqual((family['max_members'], family['available_slots']), (5, 0))
         goal = self.goal()
         self.db.get(User,member['user']['id']).is_active=False
         self.db.commit()

@@ -7,6 +7,6 @@ PLAN_LIMITS={
     "premium":dict(PREMIUM),
     "trial":dict(BASIC),
     "premium_individual":dict(PREMIUM),
-    "family_pack":{**PREMIUM,"family_members":min(6, get_settings().FAMILY_PACK_MEMBER_LIMIT)},
+    "family_pack":{**PREMIUM,"family_members":min(5, get_settings().FAMILY_PACK_MEMBER_LIMIT)},
     "read_only":{**BASIC,"receipt_scans":0,"advisor_messages":0,"active_goals":0,"active_reminders":0},
 }

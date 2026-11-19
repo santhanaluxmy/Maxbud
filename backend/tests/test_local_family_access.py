@@ -82,7 +82,7 @@ class LocalFamilyAccessTests(unittest.TestCase):
 
     def test_init_is_new_only_private_synthetic_and_has_no_financial_seed(self):
         with Session(self.engine) as db:
-            self.assertEqual(db.scalar(select(func.count(User.id))), 6)
+            self.assertEqual(db.scalar(select(func.count(User.id))), 5)
             self.assertEqual(db.scalar(select(func.count(Transaction.id))), 0)
             self.assertEqual(db.scalar(select(func.count(Family.id))), 0)
             self.assertTrue(all(row.plan == 'free' and row.source == 'local_test_baseline' for row in db.scalars(select(Subscription))))
@@ -143,7 +143,7 @@ class LocalFamilyAccessTests(unittest.TestCase):
         with self.assertRaises(LocalTestError):
             Sandbox(link, self.settings).status()
 
-    def test_grant_sponsors_five_with_demo_disabled_and_revoke_preserves_history(self):
+    def test_grant_sponsors_four_with_demo_disabled_and_revoke_preserves_history(self):
         status = self.grant()
         self.assertEqual((status['plan'], status['source']), ('family_pack', 'test_access'))
         self.assertIsNotNone(status['expires_at_utc'])
@@ -155,8 +155,8 @@ class LocalFamilyAccessTests(unittest.TestCase):
             sponsored = self.client.get('/subscriptions', headers=member).json()
             self.assertTrue(sponsored['test_access'])
             self.assertEqual((sponsored['plan'], sponsored['billing_plan']), ('free', 'free'))
-        self.assertEqual(self.client.get('/family', headers=owner).json()['total_active_members'], 6)
-        self.assertEqual(self.post('/family/invitations', {'email': 'seventh@example.com', 'can_view_shared': True, 'can_add_shared': True}, owner).status_code, 409)
+        self.assertEqual(self.client.get('/family', headers=owner).json()['total_active_members'], 5)
+        self.assertEqual(self.post('/family/invitations', {'email': 'sixth@example.com', 'can_view_shared': True, 'can_add_shared': True}, owner).status_code, 409)
         wallet = self.post('/family/wallets', {'name': 'Test wallet'}, owner).json()['id']
         income = {'account_id': wallet, 'category': 'Common', 'amount': '1000', 'request_id': 'income'}
         self.assertEqual(self.post('/family/income', income, members[0]).status_code, 201)
@@ -173,7 +173,7 @@ class LocalFamilyAccessTests(unittest.TestCase):
         self.assertFalse(rights['test_access'])
         with Session(self.engine) as db:
             self.assertEqual(db.scalar(select(func.count(Transaction.id))), 2)
-            self.assertEqual(db.scalar(select(func.count(FamilyMembership.id))), 6)
+            self.assertEqual(db.scalar(select(func.count(FamilyMembership.id))), 5)
             self.assertEqual(db.scalar(select(func.count(DemoCheckout.id))), 0)
             events = db.scalars(select(PlatformEvent).where(PlatformEvent.kind.like('local_test_family_%'))).all()
             self.assertEqual(len(events), 2)

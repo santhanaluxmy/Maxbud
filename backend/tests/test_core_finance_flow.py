@@ -46,7 +46,7 @@ class CoreFinanceTests(test_family.FamilyTests):
     def test_personal_contribution_replay_preserves_baseline_and_reserves_once(self):
         account = self.account()
         goal = self.goal(saved='20')
-        payload = {'amount': '10', 'request_id': 'allocation-one'}
+        payload = {'amount': '10', 'request_id': 'allocation-one', 'account_id': account}
         for _ in range(2):
             response = self.post(f'/goals/{goal}/contribute', payload)
             self.assertEqual(response.status_code, 200, response.text)
@@ -58,12 +58,12 @@ class CoreFinanceTests(test_family.FamilyTests):
         self.assertEqual(Decimal(dashboard['total_savings_allocated']), 30)
         self.assertEqual(Decimal(dashboard['shared_savings_allocated']), 0)
         self.assertEqual(Decimal(dashboard['safe_to_spend_estimate']), 70)
-        self.assertEqual(self.balance(account), 100)
+        self.assertEqual(self.balance(account), 90)
         self.assertEqual(self.get('/transactions').json(), [])
 
     def test_contribution_replay_after_completion_and_archive(self):
         goal = self.goal(target='10')
-        payload = {'amount': '10', 'request_id': 'complete-once'}
+        payload = {'amount': '10', 'request_id': 'complete-once', 'account_id': self.account()}
         for _ in range(2):
             response = self.post(f'/goals/{goal}/contribute', payload)
             self.assertEqual(response.status_code, 200, response.text)
@@ -77,7 +77,7 @@ class CoreFinanceTests(test_family.FamilyTests):
 
     def test_contribution_key_conflicts_and_cross_user_isolation(self):
         first, second = self.goal(), self.goal()
-        payload = {'amount': '10', 'request_id': 'one-key'}
+        payload = {'amount': '10', 'request_id': 'one-key', 'account_id': self.account()}
         self.assertEqual(self.post(f'/goals/{first}/contribute', payload).status_code, 200)
         self.assertEqual(self.post(f'/goals/{first}/contribute', payload | {'amount': '11'}).status_code, 409)
         self.assertEqual(self.post(f'/goals/{second}/contribute', payload).status_code, 409)
@@ -89,22 +89,24 @@ class CoreFinanceTests(test_family.FamilyTests):
         personal = self.goal()
         self.enable_family_pack()
         shared = self.goal(scope='family')
-        payload = {'amount': '10', 'request_id': 'cross-scope'}
+        payload = {'amount': '10', 'request_id': 'cross-scope', 'account_id': self.account()}
         self.assertEqual(self.post(f'/goals/{personal}/contribute', payload).status_code, 200)
         self.assertEqual(self.post(f'/goals/{shared}/contribute', payload).status_code, 409)
         self.assertEqual(Decimal(self.get('/goals?scope=family').json()[0]['saved_amount']), 0)
 
-    def test_keyless_legacy_contributions_remain_supported(self):
+    def test_new_personal_contributions_require_account_and_retry_key(self):
         goal = self.goal(saved='5')
-        for expected in [15, 25]:
-            response = self.post(f'/goals/{goal}/contribute', {'amount': '10'})
-            self.assertEqual(response.status_code, 200, response.text)
-            self.assertEqual(Decimal(response.json()['saved_amount']), expected)
-        self.assertEqual(self.db.scalar(select(func.count(GoalContribution.id)).where(GoalContribution.current_goal_id == goal)), 2)
+        account = self.account()
+        for payload in [{'amount': '10'}, {'amount': '10', 'account_id': account},
+                        {'amount': '10', 'request_id': 'missing-account'}]:
+            self.assertEqual(self.post(f'/goals/{goal}/contribute', payload).status_code, 422)
+        self.assertEqual(Decimal(self.get('/goals').json()[0]['saved_amount']), 5)
+        self.assertEqual(self.balance(account), 100)
+        self.assertEqual(self.db.scalar(select(func.count(GoalContribution.id))), 0)
 
     def test_failed_contribution_commit_rolls_back_amount_and_retry_key(self):
         goal = self.goal(saved='5')
-        payload = {'amount': '10', 'request_id': 'retry-after-failure'}
+        payload = {'amount': '10', 'request_id': 'retry-after-failure', 'account_id': self.account()}
         with patch.object(self.db, 'commit', side_effect=RuntimeError('synthetic commit failure')):
             with self.assertRaises(RuntimeError):
                 self.post(f'/goals/{goal}/contribute', payload)
@@ -240,7 +242,7 @@ class CoreFinanceTests(test_family.FamilyTests):
         transfer = self.post('/transfers', {'from_account_id': account, 'to_account_id': bank, 'amount': '100', 'client_request_id': str(uuid.uuid4())})
         self.assertEqual(transfer.status_code, 201, transfer.text)
         goal = self.get('/goals').json()[0]['id']
-        payload = {'amount': '25', 'request_id': 'flow-contribution'}
+        payload = {'amount': '25', 'request_id': 'flow-contribution', 'account_id': account}
         for _ in range(2):
             self.assertEqual(self.post(f'/goals/{goal}/contribute', payload).status_code, 200)
         due = date.today().isoformat()
@@ -248,7 +250,7 @@ class CoreFinanceTests(test_family.FamilyTests):
         for _ in range(2):
             self.assertEqual(self.post(f'/reminders/{reminder}/pay', {'due_date': due}).status_code, 200)
         dashboard = self.get('/dashboard?include_cash_flow=true').json()
-        self.assertEqual((self.balance(account), self.balance(bank)), (910, 100))
+        self.assertEqual((self.balance(account), self.balance(bank)), (885, 100))
         self.assertEqual((Decimal(dashboard['monthly_income']), Decimal(dashboard['monthly_expenses'])), (1000, 90))
         self.assertEqual(Decimal(dashboard['total_savings_allocated']), 25)
         self.assertEqual(Decimal(dashboard['safe_to_spend_estimate']), 925)

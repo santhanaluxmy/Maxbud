@@ -93,7 +93,6 @@ function SummaryCard({
   value,
   icon: Icon,
   tone,
-  note,
 }) {
   return (
     <div className={`txd-summary-card txd-${tone}`}>
@@ -106,7 +105,6 @@ function SummaryCard({
       </div>
 
       <strong>{value}</strong>
-      <small>{note}</small>
     </div>
   );
 }
@@ -498,16 +496,9 @@ export default function Transaction() {
 
       <header className="txd-header">
         <div>
-          <span className="txd-eyebrow">
-            MAXBUD / MONEY MANAGEMENT
-          </span>
 
           <h1>Transactions</h1>
 
-          <p>
-            Every income and expense, organised
-            in one place.
-          </p>
         </div>
 
         {/* THE ONLY ADD TRANSACTION BUTTON */}
@@ -537,7 +528,6 @@ export default function Transaction() {
           }
           icon={ArrowDownLeft}
           tone="income"
-          note="Recorded transactions"
         />
 
         <SummaryCard
@@ -552,7 +542,6 @@ export default function Transaction() {
           }
           icon={ArrowUpRight}
           tone="expense"
-          note="Recorded transactions"
         />
 
         <SummaryCard
@@ -568,7 +557,6 @@ export default function Transaction() {
           }
           icon={Wallet}
           tone="balance"
-          note="Income minus expenses"
         />
       </div>
 
@@ -636,10 +624,6 @@ export default function Transaction() {
           <div>
             <h2>Transaction history</h2>
 
-            <p>
-              Review, filter and manage
-              your financial entries.
-            </p>
           </div>
         </div>
 
