@@ -14,9 +14,10 @@ export default function DashboardLayout() {
   useEffect(() => {
     if (sessionStorage.getItem("maxbud_plan_interest")) {
       sessionStorage.removeItem("maxbud_plan_interest");
-      navigate("/dashboard/upgrade", { replace: true });
+      // A Stripe return must finish server verification before choosing a page.
+      if (!["/dashboard/payment-success", "/dashboard/upgrade"].includes(pathname)) navigate("/dashboard/upgrade", { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, pathname]);
   const [unread, setUnread] = useState(0);
   useEffect(() => { const controller = new AbortController(); api("/notifications", { signal: controller.signal }).then(rows => { if (!controller.signal.aborted) setUnread(rows.filter(row => !row.read).length); }).catch(() => {}); return () => controller.abort(); }, [pathname]);
   const [menuOpen, setMenuOpen] = useState(false);

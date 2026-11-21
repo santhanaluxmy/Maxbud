@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { api, money } from "../../../api/client";
 import GlassCard from "../../../components/common/GlassCard";
 import { planLabels, useSubscription } from "../../../subscriptions/SubscriptionContext";
@@ -13,6 +13,7 @@ export default function Upgrade() {
   const [busy, setBusy] = useState("");
   const operation = useRef(false);
   const [params] = useSearchParams();
+  const { state } = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
     if (params.get("checkout") === "returned") navigate("/dashboard/payment-success", { replace: true });
@@ -27,8 +28,11 @@ export default function Upgrade() {
   return <>
     <div className="db-page-intro"><div><span className="db-page-subtitle">YOUR MAXBUD MEMBERSHIP</span><h1>Subscription</h1><p>Personal tools for you. Shared tools for your household.</p></div></div>
     {data?.catalog.stripe_test_enabled && <p className="db-note" role="note">Test mode · No real money is charged.</p>}
-    {params.get("checkout") === "canceled" && <p className="db-warning" role="status">Checkout was canceled. Your plan has not changed. You can return to checkout when you’re ready.</p>}
-    {(error || loadError) && <p className="db-error" role="alert">{error || loadError}</p>}
+    {params.get("checkout") === "canceled" && <p className="db-warning" role="status">Checkout was canceled or expired. Review your current plan below before trying again.</p>}
+    {params.get("checkout") === "failed" && <p className="db-warning" role="status">Checkout was not successful. Review your current subscription status before trying again.</p>}
+    {params.get("checkout") === "pending" && <p className="db-warning" role="status">Payment confirmation is still pending. If you already paid, use Check payment confirmation below. Do not make another payment.</p>}
+    {params.get("checkout") === "error" && <p className="db-warning" role="status">We could not verify your subscription. Check payment confirmation below before trying another payment.</p>}
+    {(error || loadError || state?.verificationError) && <p className="db-error" role="alert">{error || loadError || state?.verificationError}</p>}
     {!data ? <GlassCard><p role="status">{loadError ? "Membership could not load." : "Loading membership…"}</p>{loadError && <button className="db-outline-btn" disabled={!!busy} onClick={() => run("refresh", refresh)}>Try again</button>}</GlassCard> : <>
       <GlassCard className="subscription-status"><div><span className="db-page-subtitle">CURRENT PLAN</span><h2>{planLabels[data.plan] || data.plan}</h2><p>Status: {data.billing_status.replaceAll("_", " ")}</p>
         {data.plan === "trial" && data.trial_ends_at && <p>{data.trial_days_remaining} days remaining · Trial ends {date(data.trial_ends_at)}</p>}

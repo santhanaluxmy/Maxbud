@@ -303,7 +303,7 @@ function FeatureCard({ feature, index }) {
       </div>
 
       <div className="feature-art-frame"><FeatureVisual index={index} /></div>
-      <Link className="showcase-explore" to="/register" aria-label={`Explore ${feature.title}`}><ArrowRight size={19}/></Link>
+      <Link className="showcase-explore" to="/register" aria-label={`Explore ${feature.title}`} />
     </article>
   );
 }

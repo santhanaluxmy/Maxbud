@@ -16,11 +16,11 @@ test('membership cards expose only monthly purchases, correct current plan and v
     const catalog = { currency: 'LKR', stripe_test_enabled: true, checkout_available: { premium_individual: true, family_pack: true }, plans: [
       { id: 'trial', name: 'Free Trial', prices: { monthly: '0.00' }, limits: basic },
       { id: 'premium_individual', name: 'Premium Individual', prices: { monthly: '650.00' }, limits: premium },
-      { id: 'family_pack', name: 'Family Pack', prices: { monthly: '900.00' }, limits: { ...premium, family_members: 6 } },
+      { id: 'family_pack', name: 'Family Pack', prices: { monthly: '900.00' }, limits: { ...premium, family_members: 5 } },
     ] };
-    function render(overrides = {}, Component = Upgrade) {
+    function render(overrides = {}, Component = Upgrade, entry = '/dashboard/upgrade') {
       const subscription = { plan: 'trial', source: 'trial', status: 'trialing', billing_status: 'trialing', can_edit: true, limits: basic, catalog, ...overrides };
-      return renderToStaticMarkup(createElement(MemoryRouter, null, createElement(SubscriptionContext.Provider, { value: { subscription, usage: { used: { receipt_scans: 3, advisor_messages: 2 }, limits: subscription.limits }, error: '', refresh: async () => subscription } }, createElement(Component))));
+      return renderToStaticMarkup(createElement(MemoryRouter, { initialEntries: [entry] }, createElement(SubscriptionContext.Provider, { value: { subscription, usage: { used: { receipt_scans: 3, advisor_messages: 2 }, limits: subscription.limits }, error: '', refresh: async () => subscription } }, createElement(Component))));
     }
     const trial = render();
     assert.match(trial, /Upgrade to Premium/);
@@ -40,5 +40,8 @@ test('membership cards expose only monthly purchases, correct current plan and v
     const confirmation = render({}, PaymentSuccess);
     assert.match(confirmation, /Activating your subscription/);
     assert.doesNotMatch(confirmation, /Premium Active|Family Pack Active|Go to Dashboard/);
+    for (const [reason, message] of [['failed', /Checkout was not successful/], ['canceled', /Checkout was canceled or expired/], ['pending', /Do not make another payment/], ['error', /We could not verify your subscription/]]) {
+      assert.match(render({}, Upgrade, '/dashboard/upgrade?checkout=' + reason), message);
+    }
   } finally { await server.close(); }
 });

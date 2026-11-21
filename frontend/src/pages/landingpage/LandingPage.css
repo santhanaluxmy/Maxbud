@@ -1591,9 +1591,8 @@
 .landing-page .showcase-card.tone-cream { background: #F6E7B5; border: 1px solid rgba(255, 255, 255, 0.85); }
 
 /* Feature interactions stay scoped away from the landing hero. */
-.landing-page .showcase-explore { position: absolute; top: 22px; right: 20px; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: #24484a; background: #fffdf778; transition: transform .2s, background .2s; }
+.landing-page .showcase-explore { position: absolute; top: 22px; right: 20px; z-index: 4; width: 34px; height: 34px; }
 .landing-page .showcase-copy { padding-right: 48px; }
-.landing-page .showcase-card:is(:hover, :focus-within) .showcase-explore { transform: translateX(3px); background: #fffdf7; }
 .landing-page .showcase-explore:focus-visible { outline: 2px solid #36787a; outline-offset: 4px; }
 .landing-page .footer-content { display: grid; grid-template-columns: 1.3fr repeat(3, 1fr); gap: 30px; align-items: start; }
 .landing-page .footer-brand img { display: block; object-fit: contain; }
@@ -1603,4 +1602,4 @@
 .landing-page .footer-copyright { grid-column: 1 / -1; margin: 0; padding-top: 18px; border-top: 1px solid #58717326; }
 @media (max-width: 760px) { .landing-page .footer-content { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; } }
 @media (max-width: 440px) { .landing-page .footer-content { grid-template-columns: 1fr; } }
-@media (prefers-reduced-motion: reduce) { .landing-page .showcase-card, .landing-page .showcase-explore { animation: none; transition: none; } .landing-page .showcase-card:is(:hover, :focus-within), .landing-page .showcase-card:is(:hover, :focus-within) .showcase-explore { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .landing-page .showcase-card { animation: none; transition: none; } .landing-page .showcase-card:is(:hover, :focus-within) { transform: none; } }

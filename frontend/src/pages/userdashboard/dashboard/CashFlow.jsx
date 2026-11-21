@@ -1,7 +1,6 @@
 import { money } from "../../../api/client";
 import GlassCard from "../../../components/common/GlassCard";
 
-const labels = { income: "Income", expense: "Expense", transfer_in: "Transfer in", transfer_out: "Transfer out" };
 export function CashFlowSummary({ data, currency, loading, error, retry }) {
   if (loading) return <section aria-label="Loading cash flow summary" aria-busy="true" className="db-metric-grid cash-summary-skeleton">{[0,1,2,3].map(i => <div className="glass-card" key={i}><span/><span/></div>)}</section>;
   if (error || !data) return <div className="db-warning" role="status">Cash flow summary is unavailable. <button className="db-outline-btn" onClick={retry}>Retry summary</button></div>;
@@ -9,11 +8,27 @@ export function CashFlowSummary({ data, currency, loading, error, retry }) {
   return <section aria-label="Current cash flow summary"><div className="db-metric-grid cash-summary">{metrics.map(([label, value]) => <GlassCard key={label}><p>{label}</p><strong>{money(value, currency)}</strong></GlassCard>)}</div></section>;
 }
 export default function CashFlowTable({ report, currency, loading, error, retry }) {
-  return <GlassCard title="Monthly cash flow" subtitle={report ? `Personal account activity · ${report.month}` : "Selected calendar month"}>
+  return <GlassCard className="cash-flow-panel" title="Monthly cash flow" subtitle={report ? `Personal account activity · ${report.month}` : "Selected calendar month"}>
     {loading ? <p role="status">Loading monthly cash flow…</p> : error || !report ? <p role="status">Monthly cash flow could not load. <button className="db-outline-btn" onClick={retry}>Retry report</button></p> : <>
-      <p className="db-note">{report.basis}</p>
       <div className="cash-flow-totals"><p>Opening balance <strong>{money(report.opening_balance,currency)}</strong></p><p>Net cash flow <strong>{money(report.net_cash_flow,currency)}</strong></p><p>Closing balance <strong>{money(report.closing_balance,currency)}</strong></p></div>
-      {!report.rows.length ? <p>No account movements recorded for this month. Opening and closing balances are the same.</p> : <div className="db-table-wrap cash-flow-scroll" tabIndex={0} role="region" aria-label="Monthly account movements"><table className="db-table cash-flow-table"><caption>Chronological account movements and combined running balance</caption><thead><tr>{["Date","Description","Account","Type","Income","Expense","Running balance"].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead><tbody>{report.rows.map(row => <tr key={row.id}><td>{row.date}</td><td>{row.description}{row.shared_payment && <small>Shared expense paid personally</small>}</td><td>{row.account}</td><td>{labels[row.kind] || "Movement"}{row.kind.startsWith("transfer_") && <small>{money(row.movement,currency)}</small>}</td><td className="db-income">{row.income === null ? "—" : money(row.income,currency)}</td><td className="db-expense">{row.expense === null ? "—" : money(row.expense,currency)}</td><td>{money(row.running_balance,currency)}</td></tr>)}</tbody><tfoot><tr><th scope="row" colSpan={4}>Month totals</th><td>{money(report.income,currency)}</td><td>{money(report.expense,currency)}</td><td>{money(report.closing_balance,currency)}</td></tr></tfoot></table></div>}
+      <div className="db-table-wrap cash-flow-scroll" tabIndex={0} role="region" aria-label="Monthly category summary">
+        <table className="db-table cash-flow-table">
+          <caption>Category totals · {report.month}</caption>
+          <thead><tr><th scope="col">Category</th><th scope="col">Type</th><th scope="col">Total Amount ({currency || "LKR"})</th></tr></thead>
+          <tbody>
+            {report.category_totals?.length ? report.category_totals.map(row => <tr key={`${row.kind}:${row.category}`}>
+              <th scope="row">{row.category}</th>
+              <td>{row.kind === "income" ? "Income" : "Expense"}</td>
+              <td>{money(row.amount, currency)}</td>
+            </tr>) : <tr><td colSpan={3}>No income or expenses recorded for this month.</td></tr>}
+          </tbody>
+          <tfoot>
+            <tr><th scope="row" colSpan={2}>Total Income</th><td>{money(report.income, currency)}</td></tr>
+            <tr><th scope="row" colSpan={2}>Total Expenses</th><td>{money(report.expense, currency)}</td></tr>
+            <tr><th scope="row" colSpan={2}>Net Cash Flow</th><td>{money(report.net_cash_flow, currency)}</td></tr>
+          </tfoot>
+        </table>
+      </div>
     </>}
   </GlassCard>;
 }
